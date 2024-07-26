@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # 检查参数数量
 if [ "$#" -ne 4 ]; then
