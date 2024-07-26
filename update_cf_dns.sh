@@ -2,7 +2,7 @@
 
 # 检查参数数量
 if [ "$#" -ne 4 ]; then
-    echo "用法: $0 API_KEY ZONE SUBDOMAIN NEW_IP"
+    echo "用法: $0 API_KEY ZONE SUBDOMAIN IP"
     exit 1
 fi
 
@@ -15,11 +15,17 @@ NEW_IP=$4
 # 检查是否已安装 jq
 if ! command -v jq &> /dev/null; then
     echo "jq 未安装，正在尝试安装 jq..."
-    if [ -x "$(command -v apt-get)" ]; then
-        sudo apt-get update && sudo apt-get install -y jq
-    elif [ -x "$(command -v yum)" ]; then
-        sudo yum install -y jq
-    elif [ -x "$(command -v brew)" ]; then
+    
+    # 尝试自动安装 jq
+    if command -v apt-get &> /dev/null; then
+        apt-get update && apt-get install -y jq
+    elif command -v yum &> /dev/null; then
+        yum install -y jq
+    elif command -v dnf &> /dev/null; then
+        dnf install -y jq
+    elif command -v zypper &> /dev/null; then
+        zypper install -y jq
+    elif command -v brew &> /dev/null; then
         brew install jq
     else
         echo "无法自动安装 jq，请手动安装 jq。"
