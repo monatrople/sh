@@ -16,9 +16,9 @@ NEW_IP=$4
 if ! command -v jq &> /dev/null; then
     echo "jq 未安装，正在尝试安装 jq..."
     if [ -x "$(command -v apt-get)" ]; then
-        sudo apt-get update && sudo apt-get install -y jq
+        apt-get update && apt-get install -y jq
     elif [ -x "$(command -v yum)" ]; then
-        sudo yum install -y jq
+        yum install -y jq
     elif [ -x "$(command -v brew)" ]; then
         brew install jq
     else
