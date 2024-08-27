@@ -2,26 +2,26 @@
 
 # 检测并禁用 resolvconf 和 openresolv
 if systemctl is-active --quiet resolvconf; then
-  systemctl stop resolvconf
-  systemctl disable resolvconf
+  systemctl stop resolvconf > /dev/null
+  systemctl disable resolvconf > /dev/null
   echo "resolvconf 已停止并禁用。"
 fi
 
 if systemctl is-active --quiet openresolv; then
-  systemctl stop openresolv
-  systemctl disable openresolv
+  systemctl stop openresolv > /dev/null
+  systemctl disable openresolv > /dev/null
   echo "openresolv 已停止并禁用。"
 fi
 
 # 删除 resolvconf 和 openresolv 包（如果它们存在）
 if command -v apt-get &> /dev/null; then
-  apt-get remove --purge -y resolvconf openresolv
+  apt-get remove --purge -y resolvconf openresolv > /dev/null
 elif command -v yum &> /dev/null; then
-  yum remove -y resolvconf openresolv
+  yum remove -y resolvconf openresolv > /dev/null
 elif command -v dnf &> /dev/null; then
-  dnf remove -y resolvconf openresolv
+  dnf remove -y resolvconf openresolv > /dev/null
 elif command -v zypper &> /dev/null; then
-  zypper remove -y resolvconf openresolv
+  zypper remove -y resolvconf openresolv > /dev/null
 else
   echo "无法确定包管理器。请手动删除 resolvconf 和 openresolv。"
 fi
@@ -38,8 +38,8 @@ Cache=yes
 DNSStubListener=yes
 EOF
 # 启用并启动 systemd-resolved
-systemctl enable systemd-resolved
-systemctl start systemd-resolved
+systemctl enable systemd-resolved > /dev/null
+systemctl start systemd-resolved > /dev/null
 
 # 配置 /etc/resolv.conf 指向 systemd-resolved
 ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
