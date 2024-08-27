@@ -30,12 +30,6 @@ cat <<EOF > /etc/systemd/resolved.conf
 [Resolve]
 DNS=1.1.1.1 8.8.8.8
 FallbackDNS=8.8.4.4 1.0.0.1
-Domains=example.com
-LLMNR=no
-MulticastDNS=no
-DNSSEC=no
-Cache=yes
-DNSStubListener=yes
 EOF
 # 启用并启动 systemd-resolved
 systemctl enable systemd-resolved > /dev/null
