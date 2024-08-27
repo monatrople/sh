@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# 确保以root权限运行
-if [ "$EUID" -ne 0 ]; then
-  echo "请使用root权限运行此脚本。"
-  exit
-fi
-
 # 检测并禁用 resolvconf 和 openresolv
 if systemctl is-active --quiet resolvconf; then
   systemctl stop resolvconf
