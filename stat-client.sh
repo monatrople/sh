@@ -9,6 +9,7 @@ p_value=""
 w_value=""
 alias_value=""
 n_flag=0
+location_value=""
 
 # 清空工作目录
 clear_workspace() {
@@ -22,7 +23,7 @@ clear_workspace() {
 
 # 打印帮助信息
 usage() {
-    echo "Usage: $0 -a <url> -g <group> -p <password> --alias <alias> [-w <w_value>] [-n]"
+    echo "Usage: $0 -a <url> -g <group> -p <password> --alias <alias> [--location <location>] [-w <w_value>] [-n]"
     exit 1
 }
 
@@ -95,6 +96,10 @@ parse_args() {
             alias_value="$2"
             shift 2
             ;;
+        --location)
+            location_value="$2"
+            shift 2
+            ;;
         -n)
             n_flag=1
             shift 1
@@ -139,6 +144,11 @@ build_cmd() {
     if [ "$n_flag" -eq 1 ]; then
         cmd="$cmd -n"
     fi
+
+    if [ -n "$location_value" ]; then
+        cmd="$cmd --location \"$location_value\""
+    fi
+
     echo "$cmd"
 }
 
