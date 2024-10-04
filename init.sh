@@ -166,6 +166,7 @@ EOF
 
 # 主函数
 main() {
+  echo "">/etc/motd
   check_debian
   install_packages
   configure_dns
