@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh  # 使用 sh
 
 # 检查是否是 Debian 系统
 check_debian() {
@@ -109,17 +109,17 @@ EOF
 # 根据内存调整 tcp_mem 参数
 adjust_tcp_mem() {
   total_memory=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-  total_memory_gb=$(awk "BEGIN {printf \"%.2f\", $total_memory / 1024 / 1024}")
+  total_memory_gb=$(echo "$total_memory / 1024 / 1024" | bc)
 
-  if [[ ${total_memory_gb//.*/} -lt 4 ]]; then    
+  if [ "$total_memory_gb" -lt 4 ]; then    
       sed -i "s#.*net.ipv4.tcp_mem=.*#net.ipv4.tcp_mem=262144 786432 2097152#g" /etc/sysctl.d/99-custom.conf
-  elif [[ ${total_memory_gb//.*/} -ge 4 && ${total_memory_gb//.*/} -lt 7 ]]; then
+  elif [ "$total_memory_gb" -ge 4 ] && [ "$total_memory_gb" -lt 7 ]; then
       sed -i "s#.*net.ipv4.tcp_mem=.*#net.ipv4.tcp_mem=524288 1048576 2097152#g" /etc/sysctl.d/99-custom.conf
-  elif [[ ${total_memory_gb//.*/} -ge 7 && ${total_memory_gb//.*/} -lt 11 ]]; then    
+  elif [ "$total_memory_gb" -ge 7 ] && [ "$total_memory_gb" -lt 11 ]; then    
       sed -i "s#.*net.ipv4.tcp_mem=.*#net.ipv4.tcp_mem=786432 1048576 3145728#g" /etc/sysctl.d/99-custom.conf
-  elif [[ ${total_memory_gb//.*/} -ge 11 && ${total_memory_gb//.*/} -lt 15 ]]; then    
+  elif [ "$total_memory_gb" -ge 11 ] && [ "$total_memory_gb" -lt 15 ]; then    
       sed -i "s#.*net.ipv4.tcp_mem=.*#net.ipv4.tcp_mem=1048576 1572864 3145728#g" /etc/sysctl.d/99-custom.conf
-  elif [[ ${total_memory_gb//.*/} -ge 15 ]]; then
+  elif [ "$total_memory_gb" -ge 15 ]; then
       sed -i "s#.*net.ipv4.tcp_mem=.*#net.ipv4.tcp_mem=1048576 2097152 3145728#g" /etc/sysctl.d/99-custom.conf
   fi
 }
@@ -154,7 +154,7 @@ DefaultLimitNPROC=20480000
 EOF
 
   mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
-  echo -e "[Service]\nTimeoutStartSec=1sec" | sudo tee /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
+  echo -e "[Service]\nTimeoutStartSec=1sec" > /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
   systemctl daemon-reload
   systemctl daemon-reexec
 
