@@ -12,7 +12,7 @@ check_debian() {
 
 # 更新系统并安装必要的软件包
 install_packages() {
-  apt update && apt upgrade -y && apt install -y curl wget dnsutils net-tools bash-completion systemd-resolved htpdate vim nftables
+  apt update && apt upgrade -y && apt autoremove -y && apt install -y curl wget dnsutils net-tools bash-completion systemd-resolved htpdate vim nftables
 }
 
 # 配置 DNS 设置
