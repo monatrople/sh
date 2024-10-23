@@ -23,6 +23,7 @@ configure_dns() {
 DNS=1.1.1.1 1.0.0.1
 FallbackDNS=8.8.8.8 8.8.4.4
 EOF
+  systemctl unmask systemd-resolved
   systemctl restart systemd-resolved
   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 }
