@@ -30,11 +30,14 @@ install_xanmod_kernel() {
         apt update && apt install -y $missing
     fi
 
-    wget -qO - https://dl.xanmod.org/archive.key | gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg
+    if [ ! -f /usr/share/keyrings/xanmod-archive-keyring.gpg ]; then
+        wget -qO - https://dl.xanmod.org/archive.key | gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg
+    else
+        echo "Xanmod GPG 密钥已存在，跳过下载。"
+    fi
     echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | tee /etc/apt/sources.list.d/xanmod-release.list
     apt update && apt install -y linux-xanmod-x64v3
 }
-
 # 配置 DNS 设置
 configure_dns() {
     if command -v resolvconf >/dev/null 2>&1; then
