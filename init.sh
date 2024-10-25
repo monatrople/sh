@@ -37,16 +37,24 @@ install_xanmod_kernel() {
 
 # 配置 DNS 设置
 configure_dns() {
-  rm /etc/resolv.conf
-  cat << EOF > /etc/systemd/resolved.conf
+    if command -v resolvconf >/dev/null 2>&1; then
+        echo "检测到 resolvconf，正在卸载..."
+        apt remove -y resolvconf
+    fi
+    if command -v openresolv >/dev/null 2>&1; then
+        echo "检测到 openresolv，正在卸载..."
+        apt remove -y openresolv
+    fi
+    rm -f /etc/resolv.conf
+    cat << EOF > /etc/systemd/resolved.conf
 [Resolve]
 DNS=1.1.1.1 1.0.0.1
 FallbackDNS=8.8.8.8 8.8.4.4
 EOF
-  systemctl unmask systemd-resolved
-  systemctl enable systemd-resolved
-  systemctl restart systemd-resolved
-  ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+    systemctl unmask systemd-resolved
+    systemctl enable systemd-resolved
+    systemctl restart systemd-resolved
+    ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 }
 
 # 配置 htpdate 服务
