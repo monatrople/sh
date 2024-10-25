@@ -202,7 +202,6 @@ main() {
   echo "">/etc/motd
   check_debian
   install_packages
-  install_xanmod_kernel
   configure_dns
   configure_htpdate
   configure_sysctl
