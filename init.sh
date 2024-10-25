@@ -15,6 +15,26 @@ install_packages() {
   apt update && apt upgrade -y && apt autoremove -y && apt install -y curl wget dnsutils net-tools bash-completion systemd-resolved htpdate vim nftables
 }
 
+install_xanmod_kernel() {
+    dependencies="wget gpg"
+    missing=""
+
+    for dep in $dependencies; do
+        if ! command -v "$dep" >/dev/null 2>&1; then
+            missing="$missing $dep"
+        fi
+    done
+
+    if [ -n "$missing" ]; then
+        echo "正在安装缺少的依赖项:$missing"
+        apt update && apt install -y $missing
+    fi
+
+    wget -qO - https://dl.xanmod.org/archive.key | gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg
+    echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | tee /etc/apt/sources.list.d/xanmod-release.list
+    apt update && apt install -y linux-xanmod-x64v3
+}
+
 # 配置 DNS 设置
 configure_dns() {
   rm /etc/resolv.conf
@@ -171,6 +191,7 @@ main() {
   echo "">/etc/motd
   check_debian
   install_packages
+  install_xanmod_kernel
   configure_dns
   configure_htpdate
   configure_sysctl
