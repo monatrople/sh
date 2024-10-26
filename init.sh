@@ -187,6 +187,7 @@ main() {
   configure_sysctl
   configure_limits
   configure_systemd
+  install_xanmod_kernel
 }
 
 # 调用主函数
