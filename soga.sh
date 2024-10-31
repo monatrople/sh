@@ -228,6 +228,7 @@ services:
       detect_packet: 'true'
       ban_private_ip: 'true'
       forbidden_bit_torrent: 'true'
+      force_vmess_aead: 'true'
       ss_invalid_access_enable: 'true'
       ss_invalid_access_forbidden_time: 180
       vmess_aead_invalid_access_enable: 'true'
