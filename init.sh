@@ -22,12 +22,12 @@ check_arch() {
 
 # 更新系统并安装必要的软件包（Debian 系统）
 install_packages_debian() {
-  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved vim nftables
+  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved vim nftables vnstat
 }
 
 # 更新系统并安装必要的软件包（Arch 系统）
 install_packages_arch() {
-  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables
+  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat
 }
 
 # 配置 DNS 设置
@@ -143,6 +143,7 @@ EOF
   chmod 644 /etc/sysctl.d/99-custom.conf
   sysctl --system
 }
+
 # 配置文件最大限制
 configure_limits() {
   echo "1000000" > /proc/sys/fs/file-max
@@ -183,6 +184,17 @@ SystemMaxUse=512M
 EOF
 }
 
+# 启动 vnstat 服务（Arch Linux 特有）
+enable_vnstat() {
+  if grep -qi "arch" /etc/os-release; then
+    systemctl enable vnstat.service --now
+    echo "Arch Linux 系统中已启动并启用 vnstat 服务。"
+  elif grep -qi "debian" /etc/os-release; then
+    systemctl enable vnstatd.service --now
+    echo "Debian 系统中已启动并启用 vnstatd 服务。"
+  fi
+}
+
 # 主函数
 main() {
   echo "">/etc/motd
@@ -200,6 +212,7 @@ main() {
   configure_sysctl
   configure_limits
   configure_systemd
+  enable_vnstat
 }
 
 # 调用主函数
