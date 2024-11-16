@@ -32,14 +32,6 @@ install_packages_arch() {
 
 # 配置 DNS 设置
 configure_dns() {
-    if command -v resolvconf >/dev/null 2>&1; then
-        echo "检测到 resolvconf，正在卸载..."
-        apt remove -y resolvconf
-    fi
-    if command -v openresolv >/dev/null 2>&1; then
-        echo "检测到 openresolv，正在卸载..."
-        apt remove -y openresolv
-    fi
     rm -f /etc/resolv.conf
     cat << EOF > /etc/systemd/resolved.conf
 [Resolve]
