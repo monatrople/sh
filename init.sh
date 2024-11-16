@@ -191,20 +191,6 @@ SystemMaxUse=512M
 EOF
 }
 
-# 添加 Arch Linux CN 源
-add_archlinuxcn_repo() {
-    local mirror="https://repo.archlinuxcn.org/\$arch"
-    # 检查是否已经添加过 Arch Linux CN 源
-    if grep -q "^\[archlinuxcn\]" /etc/pacman.conf; then
-        echo "Arch Linux CN 源已经存在，跳过添加。"
-    else
-        echo -e "\n[archlinuxcn]\nSigLevel = Never\nServer = ${mirror}" | tee -a /etc/pacman.conf > /dev/null
-    fi
-    pacman -Sy --noconfirm
-    echo "正在安装 archlinuxcn-keyring..."
-    pacman -S --noconfirm archlinuxcn-keyring
-}
-
 setup_rps_optimization() {
     SCRIPT_PATH="/usr/local/bin/rps.sh"
     wget https://raw.githubusercontent.com/monatrople/sh/refs/heads/main/rps.sh -O $SCRIPT_PATH
@@ -245,7 +231,6 @@ main() {
     install_packages_debian
   elif grep -qi "arch" /etc/os-release; then
     check_arch
-    add_archlinuxcn_repo
     install_packages_arch
   else
     echo "不支持的操作系统。脚本中止。"
