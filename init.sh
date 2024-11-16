@@ -204,61 +204,10 @@ add_archlinuxcn_repo() {
 }
 
 setup_rps_optimization() {
-    # 1. 创建 RPS 优化脚本
     SCRIPT_PATH="/usr/local/bin/rps.sh"
-    
-    echo "正在创建 RPS 优化脚本..."
-
-    cat << 'EOF' > $SCRIPT_PATH
-#!/bin/bash
-
-# 安装 bc 如果没有安装
-bc -v > /dev/null || yum install bc -y || apt install bc -y
-
-# 设置 RPS 流量条目数
-sysctl -w net.core.rps_sock_flow_entries=65536
-
-# 获取 CPU 核心数
-cc=$(grep -c processor /proc/cpuinfo)
-rfc=$(echo 65536/$cc | bc)
-
-# 设置 RPS 流量条目数
-for fileRfc in $(ls /sys/class/net/e*/queues/rx-*/rps_flow_cnt); do
-    echo $rfc > $fileRfc
-done
-
-# 计算 RPS 相关的 CPU 核心配置
-c=$(bc -l -q << EOF
-a1=l($cc)
-a2=l(2)
-scale=0
-a1/a2
-EOF
-)
-
-cpus=$(echo $c | awk '{for(i=1;i<$1-1;i++){printf "f"}}')
-cpuss=$(echo $c | awk '{for(i=1;i<$1;i++){printf "f"}}')
-cpusss=$(echo $c | awk '{for(i=1;i<=$1;i++){printf "f"}}')
-cpussss=$(echo $c | awk '{for(i=1;i<=$1+1;i++){printf "f"}}')
-
-# 为每个网卡接口设置 RPS CPU 核心
-for fileRps in $(ls /sys/class/net/e*/queues/rx-*/rps_cpus); do
-    echo $cpus > $fileRps
-    echo $cpuss > $fileRps
-    echo $cpusss > $fileRps
-    echo $cpussss > $fileRps
-done
-EOF
-
-    # 给脚本文件添加执行权限
+    wget https://raw.githubusercontent.com/monatrople/sh/refs/heads/main/rps.sh -O $SCRIPT_PATH
     chmod +x $SCRIPT_PATH
-    echo "RPS 优化脚本创建并设置执行权限完成。"
-
-    # 2. 创建 systemd 服务文件
     SERVICE_PATH="/etc/systemd/system/rps.service"
-    
-    echo "正在创建 systemd 服务文件..."
-
     cat << EOF > $SERVICE_PATH
 [Unit]
 Description=RPS Optimization Script
