@@ -35,11 +35,12 @@ check_root() {
     fi
 }
 
-# 检查是否是systemd系统
+# 检查是否是 systemd 系统
 check_systemd() {
-    if ! pidof systemd > /dev/null; then
-        echo "Error: This system does not use systemd."
-        exit 1
+    if pidof systemd > /dev/null; then
+        return 0  # 是 systemd 系统
+    else
+        return 1  # 不是 systemd 系统
     fi
 }
 
@@ -48,10 +49,22 @@ check_and_install_package() {
     package=$1
     if ! command -v "$package" > /dev/null; then
         echo "$package is not installed. Installing $package..."
+        
+        # 使用不同的包管理器安装
         if command -v apt-get > /dev/null; then
-            apt-get update && apt-get install -y "$package"
+            apt-get update && apt-get install -y "$package"  # Debian/Ubuntu 系列
         elif command -v yum > /dev/null; then
-            yum install -y "$package"
+            yum install -y "$package"  # CentOS/RHEL 系列
+        elif command -v dnf > /dev/null; then
+            dnf install -y "$package"  # Fedora 系列
+        elif command -v pacman > /dev/null; then
+            pacman -Sy --noconfirm "$package"  # Arch 系列
+        elif command -v zypper > /dev/null; then
+            zypper install -y "$package"  # openSUSE 系列
+        elif command -v apk > /dev/null; then
+            apk add --no-cache "$package"  # Alpine 系列
+        elif command -v emerge > /dev/null; then
+            emerge "$package"  # Gentoo 系列
         else
             echo "Unsupported package manager. Please install $package manually."
             exit 1
@@ -168,7 +181,7 @@ install_client() {
 }
 
 # 配置 systemd 服务的函数
-configure_service() {
+configure_systemd_service() {
     cmd=$(build_cmd)
     echo "cmd:$cmd"
     rm -r stat_client.service
@@ -195,20 +208,45 @@ EOF
     systemctl status stat_client
 }
 
+# 配置 OpenRC 服务的函数
+configure_openrc_service() {
+    cmd=$(build_cmd)
+    echo "cmd:$cmd"
+    
+    # 在 Alpine 上创建 OpenRC 服务脚本
+    rm -r /etc/init.d/stat_client
+    cat << EOF > /etc/init.d/stat_client
+#!/sbin/openrc-run
+
+name="stat_client"
+command="$cmd"
+command_background="yes"
+pidfile="/var/run/stat_client.pid"
+depend() {
+    need net
+    use logger
+}
+EOF
+    chmod +x /etc/init.d/stat_client
+
+    # 将服务添加到默认运行级别并启动
+    rc-update add stat_client default
+    service stat_client start
+}
+
 # 主函数
 main() {
-    # 检查是否为root用户和是否是systemd系统
+    # 检查是否为root用户
     check_root
-    check_systemd
     clear_workspace
-
-    # 解析参数
-    parse_args "$@"
 
     # 检查并安装 wget 和 unzip
     check_wget_unzip
 
-    # 如果指定了-n参数，检查并安装vnStat
+    # 解析参数
+    parse_args "$@"
+
+    # 如果指定了-n参数，检查并安装 vnstat
     if [ "$n_flag" -eq 1 ]; then
         check_and_install_vnstat
     fi
@@ -216,8 +254,14 @@ main() {
     # 安装客户端
     install_client
 
-    # 配置systemd服务
-    configure_service
+    # 检查是否是 systemd 系统
+    if check_systemd; then
+        # 配置 systemd 服务
+        configure_systemd_service
+    else
+        # 如果不是 systemd 系统，配置 OpenRC 服务
+        configure_openrc_service
+    fi
 }
 
 # 调用主函数
