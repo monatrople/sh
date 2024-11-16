@@ -191,10 +191,16 @@ EOF
 
 # 添加 Arch Linux CN 源
 add_archlinuxcn_repo() {
-  echo "正在添加 archlinuxcn 源..."
-  echo "[archlinuxcn]
-Server = https://repo.archlinuxcn.org/\$arch" | tee /etc/pacman.conf.d/archlinuxcn
-  pacman -Sy archlinuxcn-keyring --noconfirm
+    local mirror="https://repo.archlinuxcn.org/\$arch"
+    # 检查是否已经添加过 Arch Linux CN 源
+    if grep -q "^\[archlinuxcn\]" /etc/pacman.conf; then
+        echo "Arch Linux CN 源已经存在，跳过添加。"
+    else
+        echo -e "\n[archlinuxcn]\nSigLevel = Never\nServer = ${mirror}" | tee -a /etc/pacman.conf > /dev/null
+    fi
+    pacman -Sy --noconfirm
+    echo "正在安装 archlinuxcn-keyring..."
+    pacman -S --noconfirm archlinuxcn-keyring
 }
 
 # 主函数
