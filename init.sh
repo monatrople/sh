@@ -183,38 +183,6 @@ SystemMaxUse=512M
 EOF
 }
 
-setup_rps_optimization() {
-    SCRIPT_PATH="/usr/local/bin/rps.sh"
-    wget https://raw.githubusercontent.com/monatrople/sh/refs/heads/main/rps.sh -O $SCRIPT_PATH
-    chmod +x $SCRIPT_PATH
-    SERVICE_PATH="/etc/systemd/system/rps.service"
-    cat << EOF > $SERVICE_PATH
-[Unit]
-Description=RPS Optimization Script
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=$SCRIPT_PATH
-RemainAfterExit=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    # 3. 重新加载 systemd 配置并启用服务
-    echo "重新加载 systemd 配置并启用服务..."
-
-    systemctl daemon-reload
-    systemctl enable rps.service
-    systemctl start rps.service
-
-    echo "RPS 优化服务已启用并启动。"
-
-    # 4. 检查服务状态
-    systemctl status rps.service --no-pager
-}
-
 # 主函数
 main() {
   echo "">/etc/motd
