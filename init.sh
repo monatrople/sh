@@ -184,15 +184,8 @@ SystemMaxUse=512M
 EOF
 }
 
-# 启动 vnstat 服务（Arch Linux 特有）
 enable_vnstat() {
-  if grep -qi "arch" /etc/os-release; then
-    systemctl enable vnstat.service --now
-    echo "Arch Linux 系统中已启动并启用 vnstat 服务。"
-  elif grep -qi "debian" /etc/os-release; then
-    systemctl enable vnstatd.service --now
-    echo "Debian 系统中已启动并启用 vnstatd 服务。"
-  fi
+  systemctl enable vnstat.service --now
 }
 
 # 主函数
