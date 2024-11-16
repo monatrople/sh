@@ -83,6 +83,15 @@ check_wget_unzip() {
 # 检查并安装 vnstat
 check_and_install_vnstat() {
     check_and_install_package vnstat
+
+    # 启动 vnstatd 服务并设置开机自启
+    if ! systemctl is-active --quiet vnstatd; then
+        echo "Starting vnstatd service..."
+        systemctl start vnstatd  # 启动 vnstatd 服务
+    fi
+    
+    # 确保 vnstatd 在系统启动时启动
+    systemctl enable vnstatd  # 设置 vnstatd 开机自启
 }
 
 # 解析命令行参数的函数
