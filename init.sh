@@ -27,7 +27,7 @@ install_packages_debian() {
 
 # 更新系统并安装必要的软件包（Arch 系统）
 install_packages_arch() {
-  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion systemd-resolved htpdate vim nftables
+  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion htpdate vim nftables
 }
 
 # 配置 DNS 设置
@@ -205,8 +205,8 @@ main() {
     install_packages_debian
   elif grep -qi "arch" /etc/os-release; then
     check_arch
-    install_packages_arch
     add_archlinuxcn_repo
+    install_packages_arch
   else
     echo "不支持的操作系统。脚本中止。"
     exit 1
