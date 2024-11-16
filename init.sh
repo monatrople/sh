@@ -10,14 +10,26 @@ check_debian() {
   fi
 }
 
-# 更新系统并安装必要的软件包
-install_packages() {
+# 检查是否是 Arch 系统
+check_arch() {
+  if grep -qi "arch" /etc/os-release; then
+    echo "当前系统是 Arch Linux 系统。"
+  else
+    echo "当前系统不是 Arch Linux 系统。脚本中止。"
+    exit 1
+  fi
+}
+
+# 更新系统并安装必要的软件包（Debian 系统）
+install_packages_debian() {
   apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved htpdate vim nftables
 }
 
-install_xanmod_kernel() {
-  wget -qO - https://dl.xanmod.org/archive.key | gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg --yes && echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | tee /etc/apt/sources.list.d/xanmod-release.list && apt update && apt install -y linux-xanmod-x64v3
+# 更新系统并安装必要的软件包（Arch 系统）
+install_packages_arch() {
+  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion systemd-resolved htpdate vim nftables
 }
+
 # 配置 DNS 设置
 configure_dns() {
     if command -v resolvconf >/dev/null 2>&1; then
@@ -177,17 +189,34 @@ SystemMaxUse=512M
 EOF
 }
 
+# 添加 Arch Linux CN 源
+add_archlinuxcn_repo() {
+  echo "正在添加 archlinuxcn 源..."
+  echo "[archlinuxcn]
+Server = https://repo.archlinuxcn.org/\$arch" | tee /etc/pacman.conf.d/archlinuxcn
+  pacman -Sy archlinuxcn-keyring --noconfirm
+}
+
 # 主函数
 main() {
   echo "">/etc/motd
-  check_debian
-  install_packages
+  if grep -qi "debian" /etc/os-release; then
+    check_debian
+    install_packages_debian
+  elif grep -qi "arch" /etc/os-release; then
+    check_arch
+    install_packages_arch
+    add_archlinuxcn_repo
+  else
+    echo "不支持的操作系统。脚本中止。"
+    exit 1
+  fi
+  
   configure_dns
   configure_htpdate
   configure_sysctl
   configure_limits
   configure_systemd
-  install_xanmod_kernel
 }
 
 # 调用主函数
