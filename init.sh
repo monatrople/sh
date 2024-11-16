@@ -22,12 +22,12 @@ check_arch() {
 
 # 更新系统并安装必要的软件包（Debian 系统）
 install_packages_debian() {
-  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved htpdate vim nftables
+  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved vim nftables
 }
 
 # 更新系统并安装必要的软件包（Arch 系统）
 install_packages_arch() {
-  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion htpdate vim nftables
+  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables
 }
 
 # 配置 DNS 设置
@@ -50,15 +50,6 @@ EOF
     systemctl enable systemd-resolved
     systemctl restart systemd-resolved
     ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-}
-
-# 配置 htpdate 服务
-configure_htpdate() {
-  cat << EOF > /etc/default/htpdate
-HTP_SERVERS="www.google.com"
-HTP_OPTIONS="-D -s"
-EOF
-  systemctl restart htpdate
 }
 
 # 配置 sysctl 参数
@@ -250,7 +241,6 @@ main() {
     exit 1
   fi
   configure_dns
-  configure_htpdate
   configure_sysctl
   configure_limits
   configure_systemd
