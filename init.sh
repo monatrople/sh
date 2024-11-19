@@ -22,7 +22,7 @@ check_arch() {
 
 # 更新系统并安装必要的软件包（Debian 系统）
 install_packages_debian() {
-  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved vim nftables vnstat
+  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved systemd-timesyncd vim nftables vnstat
 }
 
 # 更新系统并安装必要的软件包（Arch 系统）
@@ -30,7 +30,6 @@ install_packages_arch() {
   pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat
 }
 
-# 配置 DNS 设置
 configure_dns() {
     rm -f /etc/resolv.conf
     cat << EOF > /etc/systemd/resolved.conf
@@ -44,7 +43,21 @@ EOF
     ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 }
 
-# 配置 sysctl 参数
+configure_dns() {
+    rm -f /etc/systemd/timesyncd.conf
+    cat << EOF > /etc/systemd/timesyncd.conf
+[Time]
+NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
+FallbackNTP=ntp.ubuntu.com time.apple.com
+RootDistanceMax=0.1
+PollIntervalMin=32
+PollIntervalMax=2048
+EOF
+    systemctl unmask systemd-timesyncd
+    systemctl enable systemd-timesyncd
+    systemctl restart systemd-timesyncd
+}
+
 configure_sysctl() {
 rm -rf /etc/sysctl.conf
 rm -rf /etc/sysctl.d/*
@@ -138,7 +151,6 @@ fi
 sysctl -p &> /dev/null
 }
 
-# 配置文件最大限制
 configure_limits() {
   echo "1000000" > /proc/sys/fs/file-max
   sed -i '/ulimit -SHn/d' /etc/profile
@@ -182,7 +194,6 @@ enable_vnstat() {
   systemctl enable vnstat.service --now
 }
 
-# 主函数
 main() {
   echo "">/etc/motd
   if grep -qi "debian" /etc/os-release; then
