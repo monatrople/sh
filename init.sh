@@ -49,9 +49,6 @@ configure_dns() {
 [Time]
 NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
 FallbackNTP=ntp.ubuntu.com time.apple.com
-RootDistanceMax=0.1
-PollIntervalMin=32
-PollIntervalMax=2048
 EOF
     systemctl unmask systemd-timesyncd
     systemctl enable systemd-timesyncd
