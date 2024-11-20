@@ -233,6 +233,7 @@ services:
       ss_invalid_access_forbidden_time: 180
       vmess_aead_invalid_access_enable: 'true'
       vmess_aead_invalid_access_forbidden_time: '180'
+      geo_update_enable: 'true'
     volumes:
       - "./config:/etc/soga/"
 EOF
