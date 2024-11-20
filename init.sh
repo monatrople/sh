@@ -43,7 +43,7 @@ EOF
     ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 }
 
-configure_dns() {
+configure_timesync() {
     rm -f /etc/systemd/timesyncd.conf
     cat << EOF > /etc/systemd/timesyncd.conf
 [Time]
@@ -204,6 +204,7 @@ main() {
     exit 1
   fi
   configure_dns
+  configure_timesync
   configure_sysctl
   configure_limits
   configure_systemd
