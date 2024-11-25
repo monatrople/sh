@@ -191,6 +191,38 @@ enable_vnstat() {
   systemctl enable vnstat.service --now
 }
 
+install_docker() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        DISTRO=$ID
+    else
+        echo "无法检测操作系统发行版。"
+        exit 1
+    fi
+    mkdir -p /etc/containerd
+    cat > /etc/containerd/config.toml << EOF
+    [plugins]
+      [plugins.'io.containerd.internal.v1.opt']
+        path = '/var/lib/containerd'
+    EOF
+    case "$DISTRO" in
+        arch)
+            echo "正在 Arch Linux 上安装 Docker..."
+            sudo pacman -Sy docker --noconfirm
+            sudo systemctl start docker.service
+            sudo systemctl enable docker.service
+            ;;
+        *)
+            echo "正在 $DISTRO 上安装 Docker..."
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sudo sh get-docker.sh
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            ;;
+    esac
+    rm -r /opt/containerd
+}
+
 main() {
   echo "">/etc/motd
   if grep -qi "debian" /etc/os-release; then
@@ -209,6 +241,7 @@ main() {
   configure_limits
   configure_systemd
   enable_vnstat
+  install_docker
 }
 
 # 调用主函数
