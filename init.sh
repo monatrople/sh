@@ -199,12 +199,8 @@ install_docker() {
         echo "无法检测操作系统发行版。"
         exit 1
     fi
-    mkdir -p /etc/containerd
-    cat > /etc/containerd/config.toml << EOF
-    [plugins]
-      [plugins.'io.containerd.internal.v1.opt']
-        path = '/var/lib/containerd'
-    EOF
+    mkdir -p /etc/containerd && touch /etc/containerd/config.toml
+    echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
     case "$DISTRO" in
         arch)
             echo "正在 Arch Linux 上安装 Docker..."
