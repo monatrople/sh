@@ -204,7 +204,7 @@ install_docker() {
     case "$DISTRO" in
         arch)
             echo "正在 Arch Linux 上安装 Docker..."
-            pacman -Sy docker --noconfirm
+            pacman -Sy docker docker-compose --noconfirm
             systemctl start docker.service
             systemctl enable docker.service
             ;;
