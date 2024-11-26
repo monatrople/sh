@@ -204,19 +204,19 @@ install_docker() {
     case "$DISTRO" in
         arch)
             echo "正在 Arch Linux 上安装 Docker..."
-            sudo pacman -Sy docker --noconfirm
-            sudo systemctl start docker.service
-            sudo systemctl enable docker.service
+            pacman -Sy docker --noconfirm
+            systemctl start docker.service
+            systemctl enable docker.service
             ;;
         *)
             echo "正在 $DISTRO 上安装 Docker..."
             curl -fsSL https://get.docker.com -o get-docker.sh
-            sudo sh get-docker.sh
-            sudo systemctl start docker
-            sudo systemctl enable docker
+            sh get-docker.sh
+            systemctl start docker
+            systemctl enable docker
             ;;
     esac
-    rm -r /opt/containerd
+    rm -rf /opt/containerd
 }
 
 main() {
