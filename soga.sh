@@ -31,50 +31,40 @@ do
     esac
 done
 
-if [ -z "$name" ] || [ -z "$webapi_url" ] || [ -z "$webapi_key" ] || [ -z "$server_type" ]|| [ -z "$soga_key" ] || [ -z "$node_id" ]
-then
+if [ -z "$name" ] || [ -z "$webapi_url" ] || [ -z "$webapi_key" ] || [ -z "$server_type" ] || [ -z "$soga_key" ] || [ -z "$node_id" ]; then
     echo "Usage: \$0 name=<name> webapi_url=<webapi_url> webapi_key=<webapi_key> server_type=<server_type> soga_key=<soga_key> node_id=<node_id>"
     exit 1
 fi
 
-InstallDocker(){
-
-cat <<EOF >/etc/apt/preferences.d/docker
-Package: docker docker.io docker-compose 
+# 安装 Docker
+InstallDocker() {
+    if [ -f /etc/arch-release ]; then
+        echo "检测到 Arch Linux 系统，使用 pacman 安装 Docker。"
+        pacman -S --noconfirm docker docker-compose
+    else
+        # 为 Ubuntu/Debian 系列添加 Docker 配置
+        cat <<EOF >/etc/apt/preferences.d/docker
+Package: docker docker.io docker-compose
 Pin: release *
 Pin-Priority: -1
 EOF
 
-if command -v docker &> /dev/null; then
-    docker_version=$(docker --version | awk '{print $3}')
-    echo -e "${green}Docker已安装,版本号：$docker_version"
-else
-    echo -e "${green} 开始安装 Docker"
-    if [[ $(curl -m 10 -s https://ipapi.co/json | grep 'China') != "" ]]; then
-      export DOWNLOAD_URL="https://mirrors.tuna.tsinghua.edu.cn/docker-ce"
+        if command -v docker &>/dev/null; then
+            docker_version=$(docker --version | awk '{print $3}')
+            echo -e "Docker 已安装，版本：$docker_version"
+        else
+            echo -e "开始安装 Docker..."
+            curl -fsSL https://get.docker.com | sh
+            rm -rf /opt/containerd
+            echo -e "Docker 安装完成。"
+        fi
     fi
-    sh <(curl -k 'https://get.docker.com') &> /dev/null
-    rm -rf /opt/containerd
-    echo -e "${green} Docker 安装完成"
-fi
-
-sed -i '/alias dc/d' ~/.bashrc
-if command -v docker-compose &> /dev/null; then
-    if ! grep -q "alias dc" ~/.bashrc; then
-      echo "alias dc='docker-compose'" >>~/.bashrc
-    fi
-    
-else
-    if ! grep -q "alias dc" ~/.bashrc; then
-      echo "alias dc='docker compose'" >>~/.bashrc
-    fi
-fi
-source ~/.bashrc
 }
 
-SysOptimize(){
-rm -rf /etc/sysctl.d/*
-cat <<EOF >/etc/sysctl.conf
+# 系统优化
+SysOptimize() {
+    rm -rf /etc/sysctl.d/*
+    cat <<EOF >/etc/sysctl.conf
 fs.file-max = 1000000
 fs.inotify.max_user_instances = 131072
 kernel.msgmnb = 65536
@@ -137,114 +127,68 @@ vm.dirty_ratio = 40
 vm.swappiness = 20
 EOF
 
-total_memory=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-total_memory_bytes=$((total_memory * 1024))
-total_memory_gb=$(awk "BEGIN {printf \"%.2f\", $total_memory / 1024 / 1024}")
-nf_conntrack_max=$((total_memory_bytes / 16384 ))
-nf_conntrack_buckets=$((nf_conntrack_max / 4))
-sed -i "s#.*net.netfilter.nf_conntrack_max = .*#net.netfilter.nf_conntrack_max = ${nf_conntrack_max}#g" /etc/sysctl.conf
-sed -i "s#.*net.netfilter.nf_conntrack_buckets = .*#net.netfilter.nf_conntrack_buckets = ${nf_conntrack_buckets}#g" /etc/sysctl.conf
-#<4GB 1G_3G_8G
-if [[ ${total_memory_gb//.*/} -lt 4 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =262144 786432 2097152#g" /etc/sysctl.conf
-#6GB 2G_4G_8G
-elif [[ ${total_memory_gb//.*/} -ge 4 && ${total_memory_gb//.*/} -lt 7 ]]; then
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =524288 1048576 2097152#g" /etc/sysctl.conf
-#8GB 3G_4G_12G
-elif [[ ${total_memory_gb//.*/} -ge 7 && ${total_memory_gb//.*/} -lt 11 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =786432 1048576 3145728#g" /etc/sysctl.conf
-#12GB 4G_6G_12G
-elif [[ ${total_memory_gb//.*/} -ge 11 && ${total_memory_gb//.*/} -lt 15 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =1048576 1572864 3145728#g" /etc/sysctl.conf
-#>16GB 4G_8G_12G
-elif [[ ${total_memory_gb//.*/} -ge 15 ]]; then
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =1048576 2097152 3145728#g" /etc/sysctl.conf
-fi
-sysctl -p &> /dev/null
-  
-echo "1000000" > /proc/sys/fs/file-max
-sed -i '/ulimit -SHn/d' /etc/profile
-echo "ulimit -SHn 1000000" >>/etc/profile
-ulimit -SHn 1000000 && ulimit -c unlimited
-
-cat <<EOF >/etc/security/limits.conf
-*     soft   nofile    1048576
-*     hard   nofile    1048576
-*     soft   nproc     1048576
-*     hard   nproc     1048576
-*     soft   core      1048576
-*     hard   core      1048576
-*     hard   memlock   unlimited
-*     soft   memlock   unlimited
-EOF
-
-cat <<EOF >/etc/systemd/system.conf
-[Manager]
-DefaultTimeoutStopSec=30s
-DefaultLimitCORE=infinity
-DefaultLimitNOFILE=20480000
-DefaultLimitNPROC=20480000
-EOF
-
-systemctl daemon-reload
-systemctl daemon-reexec
-
-cat <<EOF >/etc/systemd/journald.conf
-[Journal]
-SystemMaxUse=512M
-EOF
-echo -e "${green}系统优化完成"
+    sysctl -p &>/dev/null
+    echo -e "系统优化完成。"
 }
 
-DeplaySoga(){
-apt install -y wget;
-mkdir -p /opt/$name
-mkdir -p /opt/$name/config
-cd /opt/$name
+# 部署 Soga 服务
+DeplaySoga() {
+    pacman -S --noconfirm wget
+    mkdir -p /opt/$name
+    mkdir -p /opt/$name/config
+    cd /opt/$name
+    cat <<EOF > .env
+log_level=info
+type=v2board
+api=webapi
+webapi_url=$webapi_url
+webapi_key=$webapi_key
+soga_key=$soga_key
+server_type=$server_type
+node_id=$node_id
+sniff_redirect=true
+proxy_protocol=true
+udp_proxy_protocol=true
+detect_packet=true
+ban_private_ip=true
+forbidden_bit_torrent=true
+force_vmess_aead=true
+ss_invalid_access_enable=true
+ss_invalid_access_forbidden_time=180
+vmess_aead_invalid_access_enable=true
+vmess_aead_invalid_access_forbidden_time=180
+geo_update_enable=true
+block_list_url=https://raw.githubusercontent.com/monatrople/rulelist/refs/heads/main/blockList
+EOF
 
-wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat -O config/geoip.dat
-wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat -O config/geosite.dat
+    # 下载必要的规则文件
+    wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat -O config/geoip.dat
+    wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat -O config/geosite.dat
 
-cat << EOF > docker-compose.yaml
+    # 创建 docker-compose.yaml 文件
+    cat <<EOF > docker-compose.yaml
 ---
 services:
-  $name:
+  ${name}:
     image: vaxilu/soga:latest
-    container_name: $name
+    container_name: ${name}
     restart: always
     network_mode: host
-    environment:
-      log_level: info
-      type: v2board
-      api: webapi
-      webapi_url: $webapi_url
-      webapi_key: $webapi_key
-      soga_key: $soga_key
-      server_type: $server_type
-      node_id: $node_id
-      sniff_redirect: 'true'
-      proxy_protocol: 'true'
-      udp_proxy_protocol: 'true'
-      detect_packet: 'true'
-      ban_private_ip: 'true'
-      forbidden_bit_torrent: 'true'
-      force_vmess_aead: 'true'
-      ss_invalid_access_enable: 'true'
-      ss_invalid_access_forbidden_time: 180
-      vmess_aead_invalid_access_enable: 'true'
-      vmess_aead_invalid_access_forbidden_time: '180'
-      geo_update_enable: 'true'
-      block_list_url: 'https://raw.githubusercontent.com/monatrople/rulelist/refs/heads/main/blockList'
+    env_file:
+      - .env  # 使用 .env 文件
     volumes:
       - "./config:/etc/soga/"
 EOF
-if command -v docker-compose &> /dev/null; then
-  docker-compose up -d
-else
-  docker compose up -d
-fi
+
+    # 使用 docker-compose 启动容器
+    if command -v docker-compose &>/dev/null; then
+        docker-compose up -d
+    else
+        docker compose up -d
+    fi
 }
 
+# 执行安装、优化和部署函数
 InstallDocker
 SysOptimize
 DeplaySoga
