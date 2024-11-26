@@ -138,7 +138,7 @@ DeplaySoga() {
     mkdir -p /opt/$name/config
     cd /opt/$name
     cat <<EOF > .env
-log_level=info
+log_level=debug
 type=v2board
 api=webapi
 webapi_url=$webapi_url
