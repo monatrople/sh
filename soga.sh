@@ -150,7 +150,6 @@ sniff_redirect=true
 proxy_protocol=true
 udp_proxy_protocol=true
 detect_packet=true
-ban_private_ip=true
 forbidden_bit_torrent=true
 force_vmess_aead=true
 ss_invalid_access_enable=true
