@@ -234,6 +234,7 @@ services:
       vmess_aead_invalid_access_enable: 'true'
       vmess_aead_invalid_access_forbidden_time: '180'
       geo_update_enable: 'true'
+      block_list_url: 'https://raw.githubusercontent.com/monatrople/rulelist/refs/heads/main/blockList'
     volumes:
       - "./config:/etc/soga/"
 EOF
