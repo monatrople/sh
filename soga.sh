@@ -146,7 +146,6 @@ webapi_key=$webapi_key
 soga_key=$soga_key
 server_type=$server_type
 node_id=$node_id
-sniff_redirect=true
 proxy_protocol=true
 udp_proxy_protocol=true
 detect_packet=true
@@ -174,7 +173,7 @@ services:
     restart: always
     network_mode: host
     env_file:
-      - .env  # 使用 .env 文件
+      - .env
     volumes:
       - "./config:/etc/soga/"
 EOF
