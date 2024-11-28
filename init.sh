@@ -193,15 +193,26 @@ enable_vnstat() {
 }
 
 install_docker() {
+    mkdir -p /etc/docker
+    printf '{"log-driver": "journald","log-opts": {"tag":"{{.Name}}"}}\n' > /etc/docker/daemon.json
+    mkdir -p /etc/containerd && touch /etc/containerd/config.toml
+    echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
+    
+    if command -v docker &> /dev/null; then
+        echo "Docker 已安装，跳过安装。"
+        systemctl daemon-reload
+        systemctl restart docker
+        return 0
+    fi
+
+    # Get OS distribution
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         DISTRO=$ID
     else
         echo "无法检测操作系统发行版。"
-        exit 1
+        return 1
     fi
-    mkdir -p /etc/containerd && touch /etc/containerd/config.toml
-    echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
     case "$DISTRO" in
         arch)
             echo "正在 Arch Linux 上安装 Docker..."
