@@ -183,7 +183,8 @@ EOF
 
   cat <<EOF >/etc/systemd/journald.conf
 [Journal]
-SystemMaxUse=512M
+SystemMaxRetentionSec=1day
+RuntimeMaxRetentionSec=1day
 EOF
 }
 
