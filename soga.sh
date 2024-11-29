@@ -38,27 +38,21 @@ fi
 
 # 安装 Docker
 InstallDocker() {
+if command -v docker &>/dev/null; then
+    docker_version=$(docker --version | awk '{print $3}')
+    echo -e "Docker 已安装，版本：$docker_version"
+else
+    # Detect the OS and install Docker accordingly
     if [ -f /etc/arch-release ]; then
         echo "检测到 Arch Linux 系统，使用 pacman 安装 Docker。"
         pacman -S --noconfirm docker docker-compose
     else
-        # 为 Ubuntu/Debian 系列添加 Docker 配置
-        cat <<EOF >/etc/apt/preferences.d/docker
-Package: docker docker.io docker-compose
-Pin: release *
-Pin-Priority: -1
-EOF
-
-        if command -v docker &>/dev/null; then
-            docker_version=$(docker --version | awk '{print $3}')
-            echo -e "Docker 已安装，版本：$docker_version"
-        else
-            echo -e "开始安装 Docker..."
-            curl -fsSL https://get.docker.com | sh
-            rm -rf /opt/containerd
-            echo -e "Docker 安装完成。"
-        fi
+        echo -e "开始安装 Docker..."
+        curl -fsSL https://get.docker.com | sh
+        rm -rf /opt/containerd
+        echo -e "Docker 安装完成。"
     fi
+fi
 }
 
 # 系统优化
