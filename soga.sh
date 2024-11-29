@@ -127,7 +127,28 @@ EOF
 
 # 部署 Soga 服务
 DeplaySoga() {
-    pacman -S --noconfirm wget
+if command -v wget &>/dev/null; then
+    echo "wget 已安装."
+else
+    # Detect the OS and install wget accordingly
+    if [ -f /etc/arch-release ]; then
+        echo "检测到 Arch Linux 系统，使用 pacman 安装 wget。"
+        pacman -S --noconfirm wget
+    elif [ -f /etc/debian_version ] || [ -f /etc/ubuntu_version ]; then
+        echo "检测到 Ubuntu/Debian 系统，使用 apt 安装 wget。"
+        apt update && apt install -y wget
+    elif [ -f /etc/fedora-release ]; then
+        echo "检测到 Fedora 系统，使用 dnf 安装 wget。"
+        dnf install -y wget
+    elif [ -f /etc/redhat-release ]; then
+        echo "检测到 RedHat 系统，使用 yum 安装 wget。"
+        yum install -y wget
+    else
+        echo "未能识别该系统，无法自动安装 wget，请手动安装。"
+        exit 1
+    fi
+    echo "wget 安装完成."
+fi
     mkdir -p /opt/$name
     mkdir -p /opt/$name/config
     cd /opt/$name
