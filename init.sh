@@ -1,9 +1,7 @@
 #!/bin/sh  # 使用 sh
 
-# 默认主机名为空
 hostname_param=""
 
-# 解析命令行参数
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         -h)
@@ -37,12 +35,10 @@ check_arch() {
   fi
 }
 
-# 更新系统并安装必要的软件包（Debian 系统）
 install_packages_debian() {
-  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-resolved systemd-timesyncd vim nftables vnstat
+  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote systemd-resolved 
 }
 
-# 更新系统并安装必要的软件包（Arch 系统）
 install_packages_arch() {
   pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat
 }
@@ -186,25 +182,23 @@ EOF
 }
 
 # 配置 systemd 参数
-configure_systemd() {
-  cat <<EOF >/etc/systemd/system.conf
-[Manager]
-DefaultTimeoutStopSec=30s
-DefaultLimitCORE=infinity
-DefaultLimitNOFILE=20480000
-DefaultLimitNPROC=20480000
-EOF
-
+  configure_systemd() {
+  echo "[Manager]" > /etc/systemd/system.conf
+  echo "DefaultTimeoutStopSec=30s" >> /etc/systemd/system.conf
+  echo "DefaultLimitCORE=infinity" >> /etc/systemd/system.conf
+  echo "DefaultLimitNOFILE=20480000" >> /etc/systemd/system.conf
+  echo "DefaultLimitNPROC=20480000" >> /etc/systemd/system.conf
   mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
   echo -e "[Service]\nTimeoutStartSec=1sec" > /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
+  echo "[Journal]" > /etc/systemd/journald.conf
+  echo "SystemMaxRetentionSec=1day" >> /etc/systemd/journald.conf
+  echo "RuntimeMaxRetentionSec=1day" >> /etc/systemd/journald.conf
+  echo "RateLimitIntervalSec=0" >> /etc/systemd/journald.conf
+  echo -e "[Upload]\nURL=https://log.bluetile.xyz:2096\nServerKeyFile=-\nServerCertificateFile=-\nTrustedCertificateFile=-" | tee /etc/systemd/journal-upload.conf > /dev/null
   systemctl daemon-reload
   systemctl daemon-reexec
-
-  cat <<EOF >/etc/systemd/journald.conf
-[Journal]
-SystemMaxRetentionSec=1day
-RuntimeMaxRetentionSec=1day
-EOF
+  systemctl enable --now  systemd-journal-upload
+  systemctl restart systemd-journal-upload
 }
 
 enable_vnstat() {
@@ -277,8 +271,7 @@ main() {
     exit 1
   fi
   
-  set_hostname    # 调用设置主机名的函数
-  
+  set_hostname
   configure_dns
   configure_timesync
   configure_sysctl
