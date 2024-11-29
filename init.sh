@@ -253,6 +253,7 @@ set_hostname() {
         hostnamectl set-hostname "$hostname_param"
         # 更新 /etc/hosts 文件
         sed -i "s/127.0.1.1.*/127.0.1.1 $hostname_param/" /etc/hosts
+        exec bash
     else
         echo "没有提供主机名参数，跳过主机名设置。"
     fi
