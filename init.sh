@@ -1,5 +1,22 @@
 #!/bin/sh  # 使用 sh
 
+# 默认主机名为空
+hostname_param=""
+
+# 解析命令行参数
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        -h)
+            hostname_param="$2"
+            shift 2
+            ;;
+        *)
+            echo "未知选项: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # 检查是否是 Debian 系统
 check_debian() {
   if grep -qi "debian" /etc/os-release; then
@@ -125,7 +142,7 @@ EOF
 total_memory=$(grep MemTotal /proc/meminfo | awk '{print $2}')
 total_memory_bytes=$((total_memory * 1024))
 total_memory_gb=$(awk "BEGIN {printf \"%.2f\", $total_memory / 1024 / 1024}")
-nf_conntrack_max=$((total_memory_bytes / 16384 ))
+nf_conntrack_max=$((total_memory_bytes / 16384  ))
 nf_conntrack_buckets=$((nf_conntrack_max / 4))
 sed -i "s#.*net.netfilter.nf_conntrack_max = .*#net.netfilter.nf_conntrack_max = ${nf_conntrack_max}#g" /etc/sysctl.conf
 sed -i "s#.*net.netfilter.nf_conntrack_buckets = .*#net.netfilter.nf_conntrack_buckets = ${nf_conntrack_buckets}#g" /etc/sysctl.conf
@@ -142,8 +159,10 @@ elif [[ ${total_memory_gb//.*/} -ge 7 && ${total_memory_gb//.*/} -lt 11 ]]; then
 elif [[ ${total_memory_gb//.*/} -ge 11 && ${total_memory_gb//.*/} -lt 15 ]]; then    
     sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =1048576 1572864 3145728#g" /etc/sysctl.conf
 #>16GB 4G_8G_12G
-elif [[ ${total_memory_gb//.*/} -ge 15 ]]; then
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =1048576 2097152 3145728#g" /etc/sysctl.conf
+elif [[ ${total_memory_gb//.*/} -ge 15 && ${total_memory_gb//.*/} -lt 20 ]]; then    
+    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =2097152 3145728 4194304#g" /etc/sysctl.conf
+else
+    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =3145728 4194304 8388608#g" /etc/sysctl.conf
 fi
 sysctl -p &> /dev/null
 }
@@ -220,6 +239,7 @@ install_docker() {
             systemctl start docker.service
             systemctl enable docker.service
             ;;
+
         *)
             echo "正在 $DISTRO 上安装 Docker..."
             curl -fsSL https://get.docker.com -o get-docker.sh
@@ -227,8 +247,21 @@ install_docker() {
             systemctl start docker
             systemctl enable docker
             ;;
+
     esac
     rm -rf /opt/containerd
+}
+
+# 设置主机名
+set_hostname() {
+    if [ -n "$hostname_param" ]; then
+        echo "设置主机名为: $hostname_param"
+        hostnamectl set-hostname "$hostname_param"
+        # 更新 /etc/hosts 文件
+        sed -i "s/127.0.1.1.*/127.0.1.1 $hostname_param/" /etc/hosts
+    else
+        echo "没有提供主机名参数，跳过主机名设置。"
+    fi
 }
 
 main() {
@@ -243,6 +276,9 @@ main() {
     echo "不支持的操作系统。脚本中止。"
     exit 1
   fi
+  
+  set_hostname    # 调用设置主机名的函数
+  
   configure_dns
   configure_timesync
   configure_sysctl
@@ -253,4 +289,4 @@ main() {
 }
 
 # 调用主函数
-main
+main "$@"
