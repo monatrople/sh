@@ -213,8 +213,6 @@ install_docker() {
     
     if command -v docker &> /dev/null; then
         echo "Docker 已安装，跳过安装。"
-        systemctl daemon-reload
-        systemctl restart docker
         return 0
     fi
 
@@ -243,6 +241,8 @@ install_docker() {
             ;;
 
     esac
+    systemctl daemon-reload
+    systemctl restart docker
     rm -rf /opt/containerd
 }
 
