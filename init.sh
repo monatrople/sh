@@ -210,39 +210,21 @@ install_docker() {
     printf '{"log-driver": "journald","log-opts": {"tag":"{{.Name}}"}}\n' > /etc/docker/daemon.json
     mkdir -p /etc/containerd && touch /etc/containerd/config.toml
     echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
-    
-    if command -v docker &> /dev/null; then
-        echo "Docker 已安装，跳过安装。"
-        return 0
-    fi
-
-    # Get OS distribution
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        DISTRO=$ID
+    if command -v docker &>/dev/null; then
+        docker_version=$(docker --version | awk '{print $3}')
+        echo -e "Docker 已安装，版本：$docker_version"
     else
-        echo "无法检测操作系统发行版。"
-        return 1
+        # Detect the OS and install Docker accordingly
+        if [ -f /etc/arch-release ]; then
+            echo "检测到 Arch Linux 系统，使用 pacman 安装 Docker。"
+            pacman -S --noconfirm docker docker-compose
+        else
+            echo -e "开始安装 Docker..."
+            curl -fsSL https://get.docker.com | sh
+            rm -rf /opt/containerd
+            echo -e "Docker 安装完成。"
+        fi
     fi
-    case "$DISTRO" in
-        arch)
-            echo "正在 Arch Linux 上安装 Docker..."
-            pacman -Sy docker docker-compose --noconfirm
-            systemctl start docker.service
-            systemctl enable docker.service
-            ;;
-
-        *)
-            echo "正在 $DISTRO 上安装 Docker..."
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            systemctl start docker
-            systemctl enable docker
-            ;;
-
-    esac
-    systemctl daemon-reload
-    systemctl restart docker
     rm -rf /opt/containerd
 }
 
