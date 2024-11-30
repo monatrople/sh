@@ -254,7 +254,6 @@ main() {
     exit 1
   fi
   
-  set_hostname
   configure_dns
   configure_timesync
   configure_sysctl
@@ -262,6 +261,7 @@ main() {
   configure_systemd
   enable_vnstat
   install_docker
+  set_hostname
 }
 
 # 调用主函数
