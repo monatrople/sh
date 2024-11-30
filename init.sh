@@ -225,6 +225,7 @@ install_docker() {
             echo -e "Docker 安装完成。"
         fi
     fi
+    systemctl enable --now docker
     rm -rf /opt/containerd
 }
 
