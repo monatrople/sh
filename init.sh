@@ -301,6 +301,7 @@ main() {
   enable_vnstat
   install_docker
   set_hostname
+  configure_syslog_ng
 }
 
 # 调用主函数
