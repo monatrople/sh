@@ -15,7 +15,6 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-# 检查是否是 Debian 系统
 check_debian() {
   if grep -qi "debian" /etc/os-release; then
     echo "当前系统是 Debian 系统。"
@@ -36,11 +35,11 @@ check_arch() {
 }
 
 install_packages_debian() {
-  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote systemd-resolved 
+  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote systemd-resolved syslog-ng
 }
 
 install_packages_arch() {
-  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat
+  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat syslog-ng
 }
 
 configure_dns() {
@@ -190,15 +189,8 @@ EOF
   echo "DefaultLimitNPROC=20480000" >> /etc/systemd/system.conf
   mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
   echo -e "[Service]\nTimeoutStartSec=1sec" > /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
-  echo "[Journal]" > /etc/systemd/journald.conf
-  echo "SystemMaxRetentionSec=1day" >> /etc/systemd/journald.conf
-  echo "RuntimeMaxRetentionSec=1day" >> /etc/systemd/journald.conf
-  echo "RateLimitIntervalSec=0" >> /etc/systemd/journald.conf
-  echo -e "[Upload]\nURL=https://log.bluetile.xyz:2096\nServerKeyFile=-\nServerCertificateFile=-\nTrustedCertificateFile=-" | tee /etc/systemd/journal-upload.conf > /dev/null
   systemctl daemon-reload
   systemctl daemon-reexec
-  systemctl enable --now  systemd-journal-upload
-  systemctl restart systemd-journal-upload
 }
 
 enable_vnstat() {
@@ -207,7 +199,7 @@ enable_vnstat() {
 
 install_docker() {
     mkdir -p /etc/docker
-    printf '{"log-driver": "journald","log-opts": {"tag":"{{.Name}}"}}\n' > /etc/docker/daemon.json
+    printf '{"log-driver": "syslog","log-opts": {"tag":"{{.Name}}"}}\n' > /etc/docker/daemon.json
     mkdir -p /etc/containerd && touch /etc/containerd/config.toml
     echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
     if command -v docker &>/dev/null; then
