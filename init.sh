@@ -1,11 +1,15 @@
 #!/bin/sh  # 使用 sh
-
 hostname_param=""
+ip_param=""
 
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         -h)
             hostname_param="$2"
+            shift 2
+            ;;
+        -ip)
+            ip_param="$2"
             shift 2
             ;;
         *)
@@ -180,7 +184,6 @@ configure_limits() {
 EOF
 }
 
-# 配置 systemd 参数
   configure_systemd() {
   echo "[Manager]" > /etc/systemd/system.conf
   echo "DefaultTimeoutStopSec=30s" >> /etc/systemd/system.conf
@@ -195,6 +198,49 @@ EOF
 
 enable_vnstat() {
   systemctl enable vnstat.service --now
+}
+
+configure_syslog_ng() {
+  if [ -z "$ip_param" ]; then
+    echo "没有提供目标 IP 地址，跳过 syslog-ng 配置。"
+    return 0  # 跳过该函数，不做任何操作
+  fi
+
+  echo "正在配置 /etc/syslog-ng/syslog-ng.conf..."
+
+  # 创建或修改 /etc/syslog-ng/syslog-ng.conf 配置文件
+  cat <<EOF > /etc/syslog-ng/syslog-ng.conf
+@include "scl.conf"
+
+source s_local {
+    system();
+    internal();
+};
+
+destination d_tls {
+    syslog("$ip_param" port(514) transport("tcp"));
+};
+
+log { source(s_local); destination(d_tls); };
+
+options {
+    chain_hostnames(off);
+    create_dirs(no);
+    dns_cache(no);
+    flush_lines(0);
+    group("log");
+    keep_hostname(yes);
+    log_fifo_size(10000);
+    perm(0640);
+    stats(freq(0));
+    time_reopen(10);
+    use_dns(no);
+    use_fqdn(no);
+};
+EOF
+
+  systemctl enable --now syslog-ng@default
+  systemctl restart syslog-ng@default
 }
 
 install_docker() {
