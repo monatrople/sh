@@ -160,6 +160,9 @@ services:
     container_name: ${name}
     restart: always
     network_mode: host
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     env_file:
       - .env
     volumes:
