@@ -267,6 +267,7 @@ install_docker() {
         fi
     fi
     systemctl enable --now docker
+    systemctl restart docker
     rm -rf /opt/containerd
 }
 
