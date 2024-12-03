@@ -200,11 +200,10 @@ services:
 EOF
 
     # 使用 docker-compose 启动容器
-    docker pull vaxilu/soga:latest
     if command -v docker-compose &>/dev/null; then
-        docker-compose up -d
+        docker-compose up -d --pull always
     else
-        docker compose up -d
+        docker compose up -d --pull always
     fi
 }
 
