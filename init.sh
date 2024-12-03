@@ -217,15 +217,23 @@ source s_local {
     internal();
 };
 
-destination d_tls {
+destination d_remote {
     syslog("$ip_param" port(514) transport("udp"));
 };
 
-log { source(s_local); destination(d_tls); };
+filter f_remote {
+    not facility(audit);
+};
+
+log { 
+    source(s_local); 
+    filter(f_remote);
+    destination(d_tls); 
+};
 
 options {
     chain_hostnames(off);
-    create_dirs(no);
+    create_dirs(yes);
     dns_cache(no);
     flush_lines(0);
     group("log");
