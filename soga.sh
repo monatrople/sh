@@ -163,6 +163,7 @@ server_type=$server_type
 node_id=$node_id
 proxy_protocol=true
 udp_proxy_protocol=true
+sniff_redirect=true
 detect_packet=true
 forbidden_bit_torrent=true
 force_vmess_aead=true
