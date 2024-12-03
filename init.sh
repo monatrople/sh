@@ -218,7 +218,7 @@ source s_local {
 };
 
 destination d_tls {
-    syslog("$ip_param" port(514) transport("tcp"));
+    syslog("$ip_param" port(514) transport("udp"));
 };
 
 log { source(s_local); destination(d_tls); };
