@@ -172,6 +172,11 @@ ss_invalid_access_forbidden_time=180
 vmess_aead_invalid_access_enable=true
 vmess_aead_invalid_access_forbidden_time=180
 geo_update_enable=true
+dy_limit_enable=true
+dy_limit_trigger_time=300
+dy_limit_trigger_speed=500
+dy_limit_speed=200
+dy_limit_time=600
 block_list_url=https://raw.githubusercontent.com/monatrople/rulelist/refs/heads/main/blockList
 EOF
 
