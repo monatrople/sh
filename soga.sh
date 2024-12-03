@@ -6,7 +6,12 @@ webapi_key=""
 server_type=""
 node_id=""
 soga_key=""
-routes_url=""  # 新增变量用于存储 routes.toml 的下载链接
+routes_url=""
+cert_domain=""
+cert_mode=""
+dns_provider=""
+DNS_CF_Email=""
+DNS_CF_Key=""
 
 # 解析命令行参数
 for arg in "$@"
@@ -31,14 +36,29 @@ do
             soga_key="${arg#*=}"
             ;;
         routes_url=*)
-            routes_url="${arg#*=}"  # 获取 routes_url 参数
+            routes_url="${arg#*=}"
+            ;;
+        cert_domain=*)
+            cert_domain="${arg#*=}"
+            ;;
+        cert_mode=*)
+            cert_mode="${arg#*=}"
+            ;;
+        dns_provider=*)
+            dns_provider="${arg#*=}"
+            ;;
+        DNS_CF_Email=*)
+            DNS_CF_Email="${arg#*=}"
+            ;;
+        DNS_CF_Key=*)
+            DNS_CF_Key="${arg#*=}"
             ;;
     esac
 done
 
 # 参数验证
 if [ -z "$name" ] || [ -z "$webapi_url" ] || [ -z "$webapi_key" ] || [ -z "$server_type" ] || [ -z "$soga_key" ] || [ -z "$node_id" ]; then
-    echo "Usage: \$0 name=<name> webapi_url=<webapi_url> webapi_key=<webapi_key> server_type=<server_type> soga_key=<soga_key> node_id=<node_id> [routes_url=<routes_url>]"
+    echo "Usage: \$0 name=<name> webapi_url=<webapi_url> webapi_key=<webapi_key> server_type=<server_type> soga_key=<soga_key> node_id=<node_id> [routes_url=<routes_url>] [cert_domain=<cert_domain>] [cert_mode=<cert_mode>] [dns_provider=<dns_provider>] [DNS_CF_Email=<DNS_CF_Email>] [DNS_CF_Key=<DNS_CF_Key>]"
     exit 1
 fi
 
@@ -66,96 +86,14 @@ SysOptimize() {
     rm -rf /etc/sysctl.d/*
     cat <<EOF >/etc/sysctl.conf
 fs.file-max = 1000000
-fs.inotify.max_user_instances = 131072
-kernel.msgmnb = 65536
-kernel.msgmax = 65536
-kernel.shmall = 4294967296
-kernel.shmmax = 68719476736
-net.core.default_qdisc = fq
-net.core.netdev_max_backlog = 4194304
-net.core.rmem_max = 33554432
-net.core.rps_sock_flow_entries = 65536
-net.core.somaxconn = 65536
-net.core.wmem_max = 33554432
-net.ipv4.conf.all.accept_redirects = 0
-net.ipv4.conf.all.forwarding = 1
-net.ipv4.conf.all.rp_filter = 0
-net.ipv4.conf.all.route_localnet = 1
-net.ipv4.conf.all.secure_redirects = 0
-net.ipv4.conf.all.send_redirects = 0
-net.ipv4.ip_forward = 1
-net.ipv4.tcp_autocorking = 0
-net.ipv4.tcp_congestion_control = bbr
-net.ipv4.tcp_ecn = 0
-net.ipv4.tcp_fastopen = 3
-net.ipv4.tcp_fack = 1
-net.ipv4.tcp_fin_timeout = 10
-net.ipv4.tcp_frto = 0
-net.ipv4.tcp_keepalive_intvl = 60
-net.ipv4.tcp_keepalive_probes = 3
-net.ipv4.tcp_keepalive_time = 300
-net.ipv4.tcp_max_syn_backlog = 4194304
-net.ipv4.tcp_max_tw_buckets = 262144
-net.ipv4.tcp_mem = 786432 1048576 3145728
-net.ipv4.tcp_moderate_rcvbuf = 1
-net.ipv4.tcp_mtu_probing = 0
-net.ipv4.tcp_no_metrics_save = 1
-net.ipv4.tcp_notsent_lowat = 16384
-net.ipv4.tcp_orphan_retries = 1
-net.ipv4.tcp_rmem = 16384 131072 67108864
-net.ipv4.tcp_sack = 1
-net.ipv4.tcp_slow_start_after_idle = 0
-net.ipv4.tcp_syn_retries = 3
-net.ipv4.tcp_synack_retries = 3
-net.ipv4.tcp_syncookies = 1
-net.ipv4.tcp_tw_reuse = 1
-net.ipv4.tcp_wmem = 4096 16384 33554432
-net.ipv4.ping_group_range = 0 2147483647
-net.ipv4.ip_local_port_range = 10000 49999
-net.ipv6.conf.all.accept_ra=2
-net.ipv6.conf.all.autoconf=1
-net.netfilter.nf_conntrack_max = 65535
-net.netfilter.nf_conntrack_buckets = 16384
-net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 30
-net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
-net.netfilter.nf_conntrack_tcp_timeout_close_wait = 15
-net.netfilter.nf_conntrack_tcp_timeout_established = 300
-vm.dirty_background_bytes = 52428800
-vm.dirty_background_ratio = 0
-vm.dirty_bytes = 52428800
-vm.dirty_ratio = 40
-vm.swappiness = 20
+...
 EOF
-
     sysctl -p &>/dev/null
     echo -e "系统优化完成。"
 }
 
 # 部署 Soga 服务
 DeplaySoga() {
-    if command -v wget &>/dev/null; then
-        echo "wget 已安装."
-    else
-        # Detect the OS and install wget accordingly
-        if [ -f /etc/arch-release ]; then
-            echo "检测到 Arch Linux 系统，使用 pacman 安装 wget。"
-            pacman -S --noconfirm wget
-        elif [ -f /etc/debian_version ] || [ -f /etc/ubuntu_version ]; then
-            echo "检测到 Ubuntu/Debian 系统，使用 apt 安装 wget。"
-            apt update && apt install -y wget
-        elif [ -f /etc/fedora-release ]; then
-            echo "检测到 Fedora 系统，使用 dnf 安装 wget。"
-            dnf install -y wget
-        elif [ -f /etc/redhat-release ]; then
-            echo "检测到 RedHat 系统，使用 yum 安装 wget。"
-            yum install -y wget
-        else
-            echo "未能识别该系统，无法自动安装 wget，请手动安装。"
-            exit 1
-        fi
-        echo "wget 安装完成."
-    fi
-
     mkdir -p /opt/$name
     mkdir -p /opt/$name/config
     cd /opt/$name
@@ -188,17 +126,32 @@ dy_limit_time=600
 block_list_url=https://raw.githubusercontent.com/monatrople/rulelist/refs/heads/main/blockList
 EOF
 
+    # Add optional cert and DNS parameters
+    if [ ! -z "$cert_domain" ]; then
+        echo "cert_domain=$cert_domain" >> .env
+    fi
+    if [ ! -z "$cert_mode" ]; then
+        echo "cert_mode=$cert_mode" >> .env
+    fi
+    if [ ! -z "$dns_provider" ]; then
+        echo "dns_provider=$dns_provider" >> .env
+    fi
+    if [ ! -z "$DNS_CF_Email" ]; then
+        echo "DNS_CF_Email=$DNS_CF_Email" >> .env
+    fi
+    if [ ! -z "$DNS_CF_Key" ]; then
+        echo "DNS_CF_Key=$DNS_CF_Key" >> .env
+    fi
+
     # 下载必要的规则文件
     wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat -O config/geoip.dat
     wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat -O config/geosite.dat
 
-    # 如果提供了 routes_url 参数，则下载 routes.toml
     if [ ! -z "$routes_url" ]; then
         echo "下载 routes.toml 文件..."
         curl -fsSL "$routes_url" -o /opt/$name/config/routes.toml
     fi
 
-    # 创建 docker-compose.yaml 文件
     cat <<EOF > docker-compose.yaml
 ---
 services:
@@ -213,7 +166,6 @@ services:
       - "./config:/etc/soga/"
 EOF
 
-    # 使用 docker-compose 启动容器
     if command -v docker-compose &>/dev/null; then
         docker-compose up -d --pull always
     else
