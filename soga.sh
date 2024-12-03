@@ -6,7 +6,9 @@ webapi_key=""
 server_type=""
 node_id=""
 soga_key=""
+routes_url=""  # 新增变量用于存储 routes.toml 的下载链接
 
+# 解析命令行参数
 for arg in "$@"
 do
     case $arg in
@@ -28,31 +30,35 @@ do
         soga_key=*)
             soga_key="${arg#*=}"
             ;;
+        routes_url=*)
+            routes_url="${arg#*=}"  # 获取 routes_url 参数
+            ;;
     esac
 done
 
+# 参数验证
 if [ -z "$name" ] || [ -z "$webapi_url" ] || [ -z "$webapi_key" ] || [ -z "$server_type" ] || [ -z "$soga_key" ] || [ -z "$node_id" ]; then
-    echo "Usage: \$0 name=<name> webapi_url=<webapi_url> webapi_key=<webapi_key> server_type=<server_type> soga_key=<soga_key> node_id=<node_id>"
+    echo "Usage: \$0 name=<name> webapi_url=<webapi_url> webapi_key=<webapi_key> server_type=<server_type> soga_key=<soga_key> node_id=<node_id> [routes_url=<routes_url>]"
     exit 1
 fi
 
 # 安装 Docker
 InstallDocker() {
-if command -v docker &>/dev/null; then
-    docker_version=$(docker --version | awk '{print $3}')
-    echo -e "Docker 已安装，版本：$docker_version"
-else
-    # Detect the OS and install Docker accordingly
-    if [ -f /etc/arch-release ]; then
-        echo "检测到 Arch Linux 系统，使用 pacman 安装 Docker。"
-        pacman -S --noconfirm docker docker-compose
+    if command -v docker &>/dev/null; then
+        docker_version=$(docker --version | awk '{print $3}')
+        echo -e "Docker 已安装，版本：$docker_version"
     else
-        echo -e "开始安装 Docker..."
-        curl -fsSL https://get.docker.com | sh
-        rm -rf /opt/containerd
-        echo -e "Docker 安装完成。"
+        # Detect the OS and install Docker accordingly
+        if [ -f /etc/arch-release ]; then
+            echo "检测到 Arch Linux 系统，使用 pacman 安装 Docker。"
+            pacman -S --noconfirm docker docker-compose
+        else
+            echo -e "开始安装 Docker..."
+            curl -fsSL https://get.docker.com | sh
+            rm -rf /opt/containerd
+            echo -e "Docker 安装完成。"
+        fi
     fi
-fi
 }
 
 # 系统优化
@@ -127,31 +133,33 @@ EOF
 
 # 部署 Soga 服务
 DeplaySoga() {
-if command -v wget &>/dev/null; then
-    echo "wget 已安装."
-else
-    # Detect the OS and install wget accordingly
-    if [ -f /etc/arch-release ]; then
-        echo "检测到 Arch Linux 系统，使用 pacman 安装 wget。"
-        pacman -S --noconfirm wget
-    elif [ -f /etc/debian_version ] || [ -f /etc/ubuntu_version ]; then
-        echo "检测到 Ubuntu/Debian 系统，使用 apt 安装 wget。"
-        apt update && apt install -y wget
-    elif [ -f /etc/fedora-release ]; then
-        echo "检测到 Fedora 系统，使用 dnf 安装 wget。"
-        dnf install -y wget
-    elif [ -f /etc/redhat-release ]; then
-        echo "检测到 RedHat 系统，使用 yum 安装 wget。"
-        yum install -y wget
+    if command -v wget &>/dev/null; then
+        echo "wget 已安装."
     else
-        echo "未能识别该系统，无法自动安装 wget，请手动安装。"
-        exit 1
+        # Detect the OS and install wget accordingly
+        if [ -f /etc/arch-release ]; then
+            echo "检测到 Arch Linux 系统，使用 pacman 安装 wget。"
+            pacman -S --noconfirm wget
+        elif [ -f /etc/debian_version ] || [ -f /etc/ubuntu_version ]; then
+            echo "检测到 Ubuntu/Debian 系统，使用 apt 安装 wget。"
+            apt update && apt install -y wget
+        elif [ -f /etc/fedora-release ]; then
+            echo "检测到 Fedora 系统，使用 dnf 安装 wget。"
+            dnf install -y wget
+        elif [ -f /etc/redhat-release ]; then
+            echo "检测到 RedHat 系统，使用 yum 安装 wget。"
+            yum install -y wget
+        else
+            echo "未能识别该系统，无法自动安装 wget，请手动安装。"
+            exit 1
+        fi
+        echo "wget 安装完成."
     fi
-    echo "wget 安装完成."
-fi
+
     mkdir -p /opt/$name
     mkdir -p /opt/$name/config
     cd /opt/$name
+
     cat <<EOF > .env
 log_level=debug
 type=v2board
@@ -183,6 +191,12 @@ EOF
     # 下载必要的规则文件
     wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat -O config/geoip.dat
     wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat -O config/geosite.dat
+
+    # 如果提供了 routes_url 参数，则下载 routes.toml
+    if [ ! -z "$routes_url" ]; then
+        echo "下载 routes.toml 文件..."
+        curl -fsSL "$routes_url" -o /opt/$name/config/routes.toml
+    fi
 
     # 创建 docker-compose.yaml 文件
     cat <<EOF > docker-compose.yaml
