@@ -39,24 +39,11 @@ check_arch() {
 }
 
 install_packages_debian() {
-  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote systemd-resolved syslog-ng python3
+  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote syslog-ng python3
 }
 
 install_packages_arch() {
   pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat syslog-ng python3
-}
-
-configure_dns() {
-    rm -f /etc/resolv.conf
-    cat << EOF > /etc/systemd/resolved.conf
-[Resolve]
-DNS=1.1.1.1 1.0.0.1
-FallbackDNS=8.8.8.8 8.8.4.4
-EOF
-    systemctl unmask systemd-resolved
-    systemctl enable systemd-resolved
-    systemctl restart systemd-resolved
-    ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 }
 
 configure_timesync() {
@@ -296,8 +283,6 @@ main() {
     echo "不支持的操作系统。脚本中止。"
     exit 1
   fi
-  
-  configure_dns
   configure_timesync
   configure_sysctl
   configure_limits
