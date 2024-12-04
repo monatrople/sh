@@ -107,6 +107,8 @@ webapi_key=$webapi_key
 soga_key=$soga_key
 server_type=$server_type
 node_id=$node_id
+default_dns=1.1.1.1,1.0.0.1
+dns_strategy=ipv6_first
 proxy_protocol=true
 udp_proxy_protocol=true
 sniff_redirect=true
@@ -119,10 +121,10 @@ vmess_aead_invalid_access_enable=true
 vmess_aead_invalid_access_forbidden_time=180
 geo_update_enable=true
 dy_limit_enable=true
-dy_limit_trigger_time=300
-dy_limit_trigger_speed=500
-dy_limit_speed=200
-dy_limit_time=600
+dy_limit_trigger_time=600
+dy_limit_trigger_speed=300
+dy_limit_speed=150
+dy_limit_time=1800
 block_list_url=https://raw.githubusercontent.com/monatrople/rulelist/refs/heads/main/blockList
 EOF
 
@@ -161,8 +163,8 @@ services:
     restart: always
     network_mode: host
     dns:
-      - 8.8.8.8
-      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
     env_file:
       - .env
     volumes:
