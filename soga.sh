@@ -108,7 +108,6 @@ soga_key=$soga_key
 server_type=$server_type
 node_id=$node_id
 default_dns=1.1.1.1,1.0.0.1
-dns_strategy=ipv6_first
 proxy_protocol=true
 udp_proxy_protocol=true
 sniff_redirect=true
