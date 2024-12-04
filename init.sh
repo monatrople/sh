@@ -118,11 +118,7 @@ net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 30
 net.netfilter.nf_conntrack_tcp_timeout_time_wait = 30
 net.netfilter.nf_conntrack_tcp_timeout_close_wait = 15
 net.netfilter.nf_conntrack_tcp_timeout_established = 300
-vm.dirty_background_bytes = 52428800
-vm.dirty_background_ratio = 0
-vm.dirty_bytes = 52428800
-vm.dirty_ratio = 40
-vm.swappiness = 20
+vm.swappiness = 40
 EOF
 
 total_memory=$(grep MemTotal /proc/meminfo | awk '{print $2}')
