@@ -119,8 +119,6 @@ ss_invalid_access_forbidden_time=180
 vmess_aead_invalid_access_enable=true
 vmess_aead_invalid_access_forbidden_time=180
 geo_update_enable=true
-geo_ip_url=https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat
-geo_site_url=https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat
 dy_limit_enable=true
 dy_limit_trigger_time=600
 dy_limit_trigger_speed=300
@@ -147,8 +145,8 @@ EOF
     fi
 
     # 下载必要的规则文件
-    wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat -O config/geoip.dat
-    wget -q https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat -O config/geosite.dat
+    wget -q https://github.com/v2fly/geoip/releases/latest/download/geoip.dat -O config/geoip.dat
+    wget -q https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat -O config/geosite.dat
 
     if [ ! -z "$routes_url" ]; then
         echo "下载 routes.toml 文件..."
