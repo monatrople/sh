@@ -86,6 +86,13 @@ DeplaySoga() {
     mkdir -p /opt/$name
     mkdir -p /opt/$name/config
     cd /opt/$name
+    cat <<EOF > /opt/$name/config/dns.yml
+1.1.1.1,1.0.0.1: 
+  strategy: ipv6_first                             
+  rules:                                       
+    - geosite:google
+    - geosite:youtube
+EOF
     cat <<EOF > .env
 log_level=debug
 type=v2board
@@ -163,6 +170,7 @@ EOF
     else
         docker compose up -d --pull always
     fi
+    docker restart $name
 }
 
 # 执行安装、优化和部署函数
