@@ -81,10 +81,6 @@ InstallDocker() {
     fi
 }
 
-# 系统优化
-SysOptimize() {
-}
-
 # 部署 Soga 服务
 DeplaySoga() {
     mkdir -p /opt/$name
@@ -178,5 +174,4 @@ EOF
 
 # 执行安装、优化和部署函数
 InstallDocker
-SysOptimize
 DeplaySoga
