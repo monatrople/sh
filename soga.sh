@@ -83,13 +83,7 @@ InstallDocker() {
 
 # 系统优化
 SysOptimize() {
-    rm -rf /etc/sysctl.d/*
-    cat <<EOF >/etc/sysctl.conf
-fs.file-max = 1000000
-...
-EOF
-    sysctl -p &>/dev/null
-    echo -e "系统优化完成。"
+
 }
 
 # 部署 Soga 服务
@@ -125,6 +119,8 @@ ss_invalid_access_forbidden_time=180
 vmess_aead_invalid_access_enable=true
 vmess_aead_invalid_access_forbidden_time=180
 geo_update_enable=true
+geo_ip_url=https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat
+geo_site_url=https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat
 dy_limit_enable=true
 dy_limit_trigger_time=600
 dy_limit_trigger_speed=300
