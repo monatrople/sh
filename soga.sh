@@ -148,8 +148,8 @@ EOF
         key_filename=${cert_filename%.key}
         curl -fsSL "${cert_url}.crt" -o "/opt/$name/config/cert.crt"
         curl -fsSL "${cert_url}.key" -o "/opt/$name/config/cert.key"
-        echo "cert_file=./config/cert.crt" >> .env
-        echo "key_file=./config/cert.key" >> .env
+        echo "cert_file=/etc/soga/cert.crt" >> .env
+        echo "key_file=/etc/soga/cert.key" >> .env
     fi
 
     # 下载必要的规则文件
