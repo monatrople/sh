@@ -12,8 +12,7 @@ cert_mode=""
 dns_provider=""
 DNS_CF_Email=""
 DNS_CF_Key=""
-cert_file=""
-key_file=""
+cert_url=""
 
 # 解析命令行参数
 for arg in "$@"
@@ -61,12 +60,15 @@ do
         key_file=*)
             key_file="${arg#*=}"
             ;;
+        cert_url=*)
+            cert_url="${arg#*=}"
+            ;;
     esac
 done
 
 # 参数验证
 if [ -z "$name" ] || [ -z "$webapi_url" ] || [ -z "$webapi_key" ] || [ -z "$server_type" ] || [ -z "$soga_key" ] || [ -z "$node_id" ]; then
-    echo "Usage: \$0 name=<name> webapi_url=<webapi_url> webapi_key=<webapi_key> server_type=<server_type> soga_key=<soga_key> node_id=<node_id> [routes_url=<routes_url>] [cert_domain=<cert_domain>] [cert_mode=<cert_mode>] [dns_provider=<dns_provider>] [DNS_CF_Email=<DNS_CF_Email>] [DNS_CF_Key=<DNS_CF_Key>] [cert_file=<cert_file>] [key_file=<key_file>]"
+    echo "Usage: \$0 name=<name> webapi_url=<webapi_url> webapi_key=<webapi_key> server_type=<server_type> soga_key=<soga_key> node_id=<node_id> [routes_url=<routes_url>] [cert_domain=<cert_domain>] [cert_mode=<cert_mode>] [dns_provider=<dns_provider>] [DNS_CF_Email=<DNS_CF_Email>] [DNS_CF_Key=<DNS_CF_Key>] [cert_file=<cert_file>] [key_file=<key_file>] [cert_url=<cert_url>]"
     exit 1
 fi
 
@@ -140,14 +142,13 @@ EOF
         echo "DNS_CF_Key=$DNS_CF_Key" >> .env
     fi
 
-    # Add cert_file and key_file if provided
-    if [ ! -z "$cert_file" ] && [ -f "$cert_file" ]; then
-        cp "$cert_file" /opt/$name/config/cert.crt
+    if [ ! -z "$cert_url" ]; then
+        domain=$(basename "$cert_url")
+        cert_filename=${cert_filename%.crt}
+        key_filename=${cert_filename%.key}
+        curl -fsSL "${cert_url}.crt" -o "/opt/$name/config/cert.crt"
+        curl -fsSL "${cert_url}.key" -o "/opt/$name/config/cert.key"
         echo "cert_file=/etc/soga/cert.crt" >> .env
-    fi
-
-    if [ ! -z "$key_file" ] && [ -f "$key_file" ]; then
-        cp "$key_file" /opt/$name/config/cert.key
         echo "key_file=/etc/soga/cert.key" >> .env
     fi
 
