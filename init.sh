@@ -128,23 +128,37 @@ nf_conntrack_max=$((total_memory_bytes / 16384  ))
 nf_conntrack_buckets=$((nf_conntrack_max / 4))
 sed -i "s#.*net.netfilter.nf_conntrack_max = .*#net.netfilter.nf_conntrack_max = ${nf_conntrack_max}#g" /etc/sysctl.conf
 sed -i "s#.*net.netfilter.nf_conntrack_buckets = .*#net.netfilter.nf_conntrack_buckets = ${nf_conntrack_buckets}#g" /etc/sysctl.conf
-#<4GB 1G_3G_8G
+# 内存小于 4GB
 if [[ ${total_memory_gb//.*/} -lt 4 ]]; then    
     sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =262144 786432 2097152#g" /etc/sysctl.conf
-#6GB 2G_4G_8G
+
+# 内存在 4GB 至 7GB 之间
 elif [[ ${total_memory_gb//.*/} -ge 4 && ${total_memory_gb//.*/} -lt 7 ]]; then
     sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =524288 1048576 2097152#g" /etc/sysctl.conf
-#8GB 3G_4G_12G
+
+# 内存在 7GB 至 11GB 之间
 elif [[ ${total_memory_gb//.*/} -ge 7 && ${total_memory_gb//.*/} -lt 11 ]]; then    
     sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =786432 1048576 3145728#g" /etc/sysctl.conf
-#12GB 4G_6G_12G
+
+# 内存在 11GB 至 15GB 之间
 elif [[ ${total_memory_gb//.*/} -ge 11 && ${total_memory_gb//.*/} -lt 15 ]]; then    
     sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =1048576 1572864 3145728#g" /etc/sysctl.conf
-#>16GB 4G_8G_12G
+
+# 内存在 15GB 至 20GB 之间
 elif [[ ${total_memory_gb//.*/} -ge 15 && ${total_memory_gb//.*/} -lt 20 ]]; then    
     sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =2097152 3145728 4194304#g" /etc/sysctl.conf
-else
+
+# 内存在 20GB 至 25GB 之间
+elif [[ ${total_memory_gb//.*/} -ge 20 && ${total_memory_gb//.*/} -lt 25 ]]; then    
     sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =3145728 4194304 8388608#g" /etc/sysctl.conf
+
+# 内存在 25GB 至 30GB 之间
+elif [[ ${total_memory_gb//.*/} -ge 25 && ${total_memory_gb//.*/} -lt 30 ]]; then
+    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =6291456 8388608 16777216#g" /etc/sysctl.conf
+
+# 内存大于 30GB
+else
+    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =6291456 8388608 16777216#g" /etc/sysctl.conf
 fi
 sysctl -p &> /dev/null
 }
