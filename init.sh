@@ -246,8 +246,6 @@ EOF
 install_docker() {
     mkdir -p /etc/docker
     printf '{"log-driver": "syslog","log-opts": {"tag":"{{.Name}}"}}\n' > /etc/docker/daemon.json
-    mkdir -p /etc/containerd && touch /etc/containerd/config.toml
-    echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
     if command -v docker &>/dev/null; then
         docker_version=$(docker --version | awk '{print $3}')
         echo -e "Docker 已安装，版本：$docker_version"
@@ -263,9 +261,14 @@ install_docker() {
             echo -e "Docker 安装完成。"
         fi
     fi
+    sleep 3
+    rm -rf /opt/containerd
+    mkdir -p /etc/containerd && touch /etc/containerd/config.toml
+    echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
     systemctl enable --now docker
     systemctl restart docker
-    rm -rf /opt/containerd
+    
+    
 }
 
 # 设置主机名
