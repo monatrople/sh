@@ -256,7 +256,7 @@ install_docker() {
             pacman -S --noconfirm docker docker-compose
         else
             echo -e "开始安装 Docker..."
-            rm -r /etc/containerd
+            rm -rf /etc/containerd
             curl -fsSL https://get.docker.com | sh
             rm -rf /opt/containerd
             echo -e "Docker 安装完成。"
