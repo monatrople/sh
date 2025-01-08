@@ -30,32 +30,32 @@ check_debian() {
 
 # 检查是否是 Arch 系统
 check_arch() {
-  if grep -qi "arch" /etc/os-release; then
-    echo "当前系统是 Arch Linux 系统。"
-  else
-    echo "当前系统不是 Arch Linux 系统。脚本中止。"
-    exit 1
-  fi
+if grep -qi "arch" /etc/os-release; then
+  echo "当前系统是 Arch Linux 系统。"
+else
+  echo "当前系统不是 Arch Linux 系统。脚本中止。"
+  exit 1
+fi
 }
 
 install_packages_debian() {
-  apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote syslog-ng python3 qemu-guest-agent systemd-zram-generator
+apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote syslog-ng python3 qemu-guest-agent systemd-zram-generator
 }
 
 install_packages_arch() {
-  pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat syslog-ng python3 qemu-guest-agent zram-generator
+pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat syslog-ng python3 qemu-guest-agent zram-generator
 }
 
 configure_timesync() {
-    rm -f /etc/systemd/timesyncd.conf
-    cat << EOF > /etc/systemd/timesyncd.conf
+rm -f /etc/systemd/timesyncd.conf
+cat << EOF > /etc/systemd/timesyncd.conf
 [Time]
 NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
 FallbackNTP=ntp.ubuntu.com time.apple.com
 EOF
-    systemctl unmask systemd-timesyncd
-    systemctl enable systemd-timesyncd
-    systemctl restart systemd-timesyncd
+systemctl unmask systemd-timesyncd
+systemctl enable systemd-timesyncd
+systemctl restart systemd-timesyncd
 }
 
 configure_sysctl() {
@@ -128,48 +128,32 @@ nf_conntrack_max=$((total_memory_bytes / 16384  ))
 nf_conntrack_buckets=$((nf_conntrack_max / 4))
 sed -i "s#.*net.netfilter.nf_conntrack_max = .*#net.netfilter.nf_conntrack_max = ${nf_conntrack_max}#g" /etc/sysctl.conf
 sed -i "s#.*net.netfilter.nf_conntrack_buckets = .*#net.netfilter.nf_conntrack_buckets = ${nf_conntrack_buckets}#g" /etc/sysctl.conf
-# 内存小于 4GB
 if [[ ${total_memory_gb//.*/} -lt 4 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =262144 786432 2097152#g" /etc/sysctl.conf
-
-# 内存在 4GB 至 7GB 之间
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =262144 786432 2097152#g" /etc/sysctl.conf
 elif [[ ${total_memory_gb//.*/} -ge 4 && ${total_memory_gb//.*/} -lt 7 ]]; then
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =524288 1048576 2097152#g" /etc/sysctl.conf
-
-# 内存在 7GB 至 11GB 之间
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =524288 1048576 2097152#g" /etc/sysctl.conf
 elif [[ ${total_memory_gb//.*/} -ge 7 && ${total_memory_gb//.*/} -lt 11 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =786432 1048576 3145728#g" /etc/sysctl.conf
-
-# 内存在 11GB 至 15GB 之间
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =786432 1048576 3145728#g" /etc/sysctl.conf
 elif [[ ${total_memory_gb//.*/} -ge 11 && ${total_memory_gb//.*/} -lt 15 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =1048576 1572864 3145728#g" /etc/sysctl.conf
-
-# 内存在 15GB 至 20GB 之间
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =1048576 1572864 3145728#g" /etc/sysctl.conf
 elif [[ ${total_memory_gb//.*/} -ge 15 && ${total_memory_gb//.*/} -lt 20 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =2097152 3145728 4194304#g" /etc/sysctl.conf
-
-# 内存在 20GB 至 25GB 之间
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =2097152 3145728 4194304#g" /etc/sysctl.conf
 elif [[ ${total_memory_gb//.*/} -ge 20 && ${total_memory_gb//.*/} -lt 25 ]]; then    
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =3145728 4194304 8388608#g" /etc/sysctl.conf
-
-# 内存在 25GB 至 30GB 之间
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =3145728 4194304 8388608#g" /etc/sysctl.conf
 elif [[ ${total_memory_gb//.*/} -ge 25 && ${total_memory_gb//.*/} -lt 30 ]]; then
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =6291456 8388608 16777216#g" /etc/sysctl.conf
-
-# 内存大于 30GB
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =6291456 8388608 16777216#g" /etc/sysctl.conf
 else
-    sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =6291456 8388608 16777216#g" /etc/sysctl.conf
+  sed -i "s#.*net.ipv4.tcp_mem =.*#net.ipv4.tcp_mem =6291456 8388608 16777216#g" /etc/sysctl.conf
 fi
 sysctl -p &> /dev/null
 }
 
 configure_limits() {
-  echo "1000000" > /proc/sys/fs/file-max
-  sed -i '/ulimit -SHn/d' /etc/profile
-  echo "ulimit -SHn 1000000" >>/etc/profile
-  ulimit -SHn 1000000 && ulimit -c unlimited
-
-  cat <<EOF >/etc/security/limits.conf
+echo "1000000" > /proc/sys/fs/file-max
+sed -i '/ulimit -SHn/d' /etc/profile
+echo "ulimit -SHn 1000000" >>/etc/profile
+ulimit -SHn 1000000 && ulimit -c unlimited
+cat <<EOF >/etc/security/limits.conf
 *     soft   nofile    1048576
 *     hard   nofile    1048576
 *     soft   nproc     1048576
@@ -181,32 +165,29 @@ configure_limits() {
 EOF
 }
 
-  configure_systemd() {
-  echo "[Manager]" > /etc/systemd/system.conf
-  echo "DefaultTimeoutStopSec=30s" >> /etc/systemd/system.conf
-  echo "DefaultLimitCORE=infinity" >> /etc/systemd/system.conf
-  echo "DefaultLimitNOFILE=20480000" >> /etc/systemd/system.conf
-  echo "DefaultLimitNPROC=20480000" >> /etc/systemd/system.conf
-  mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
-  echo -e "[Service]\nTimeoutStartSec=1sec" > /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
-  systemctl daemon-reload
-  systemctl daemon-reexec
+configure_systemd() {
+echo "[Manager]" > /etc/systemd/system.conf
+echo "DefaultTimeoutStopSec=30s" >> /etc/systemd/system.conf
+echo "DefaultLimitCORE=infinity" >> /etc/systemd/system.conf
+echo "DefaultLimitNOFILE=20480000" >> /etc/systemd/system.conf
+echo "DefaultLimitNPROC=20480000" >> /etc/systemd/system.conf
+mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d
+echo -e "[Service]\nTimeoutStartSec=1sec" > /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
+systemctl daemon-reload
+systemctl daemon-reexec
 }
 
 enable_vnstat() {
-  systemctl enable vnstat.service --now
+systemctl enable vnstat.service --now
 }
 
 configure_syslog_ng() {
-  if [ -z "$ip_param" ]; then
-    echo "没有提供目标 IP 地址，跳过 syslog-ng 配置。"
-    return 0  # 跳过该函数，不做任何操作
-  fi
-
-  echo "正在配置 /etc/syslog-ng/syslog-ng.conf..."
-
-  # 创建或修改 /etc/syslog-ng/syslog-ng.conf 配置文件
-  cat <<EOF > /etc/syslog-ng/syslog-ng.conf
+if [ -z "$ip_param" ]; then
+  echo "没有提供目标 IP 地址，跳过 syslog-ng 配置。"
+  return 0  # 跳过该函数，不做任何操作
+fi
+echo "正在配置 /etc/syslog-ng/syslog-ng.conf..."
+cat <<EOF > /etc/syslog-ng/syslog-ng.conf
 @include "scl.conf"
 
 source s_local {
@@ -238,74 +219,67 @@ options {
     use_fqdn(no);
 };
 EOF
-
-  systemctl enable --now syslog-ng@default
-  systemctl restart syslog-ng@default
+systemctl enable --now syslog-ng@default
+systemctl restart syslog-ng@default
 }
 
 install_docker() {
-    mkdir -p /etc/docker
-    printf '{"log-driver": "syslog","log-opts": {"tag":"{{.Name}}"}}\n' > /etc/docker/daemon.json
-    if command -v docker &>/dev/null; then
-        docker_version=$(docker --version | awk '{print $3}')
-        echo -e "Docker 已安装，版本：$docker_version"
-    else
-        # Detect the OS and install Docker accordingly
-        if [ -f /etc/arch-release ]; then
-            echo "检测到 Arch Linux 系统，使用 pacman 安装 Docker。"
-            pacman -S --noconfirm docker docker-compose
-        else
-            echo -e "开始安装 Docker..."
-            rm -rf /etc/containerd
-            curl -fsSL https://get.docker.com | sh
-            rm -rf /opt/containerd
-            echo -e "Docker 安装完成。"
-        fi
-    fi
-    sleep 3
+mkdir -p /etc/docker
+printf '{"log-driver": "syslog","log-opts": {"tag":"{{.Name}}"}}\n' > /etc/docker/daemon.json
+if command -v docker &>/dev/null; then
+  docker_version=$(docker --version | awk '{print $3}')
+  echo -e "Docker 已安装，版本：$docker_version"
+else
+  if [ -f /etc/arch-release ]; then
+    echo "检测到 Arch Linux 系统，使用 pacman 安装 Docker。"
+    pacman -S --noconfirm docker docker-compose
+  else
+    echo -e "开始安装 Docker..."
+    rm -rf /etc/containerd
+    curl -fsSL https://get.docker.com | sh
     rm -rf /opt/containerd
-    mkdir -p /etc/containerd && touch /etc/containerd/config.toml
-    echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
-    systemctl enable --now docker
-    systemctl restart docker
-    
-    
+    echo -e "Docker 安装完成。"
+  fi
+fi
+sleep 3
+rm -rf /opt/containerd
+mkdir -p /etc/containerd && touch /etc/containerd/config.toml
+echo -e "[plugins]\n  [plugins.'io.containerd.internal.v1.opt']\n    path = '/var/lib/containerd'" | tee /etc/containerd/config.toml > /dev/null
+systemctl enable --now docker
+systemctl restart docker
 }
 
-# 设置主机名
+
 set_hostname() {
-    if [ -n "$hostname_param" ]; then
-        echo "设置主机名为: $hostname_param"
-        hostnamectl set-hostname "$hostname_param"
-        # 更新 /etc/hosts 文件
-        sed -i "s/127.0.1.1.*/127.0.1.1 $hostname_param/" /etc/hosts
-        exec bash
-    else
-        echo "没有提供主机名参数，跳过主机名设置。"
-    fi
+if [ -n "$hostname_param" ]; then
+  echo "设置主机名为: $hostname_param"
+  hostnamectl set-hostname "$hostname_param"
+  sed -i "s/127.0.1.1.*/127.0.1.1 $hostname_param/" /etc/hosts
+  exec bash
+else
+    echo "没有提供主机名参数，跳过主机名设置。"
+fi
 }
 
 main() {
-  echo "">/etc/motd
-  if grep -qi "debian" /etc/os-release; then
-    check_debian
-    install_packages_debian
-  elif grep -qi "arch" /etc/os-release; then
-    check_arch
-    install_packages_arch
-  else
-    echo "不支持的操作系统。脚本中止。"
-    exit 1
-  fi
-  configure_timesync
-  configure_sysctl
-  configure_limits
-  configure_systemd
-  enable_vnstat
-  install_docker
-  configure_syslog_ng
-  set_hostname
+echo "">/etc/motd
+if grep -qi "debian" /etc/os-release; then
+  check_debian
+  install_packages_debian
+elif grep -qi "arch" /etc/os-release; then
+  check_arch
+  install_packages_arch
+else
+  echo "不支持的操作系统。脚本中止。"
+  exit 1
+fi
+configure_timesync
+configure_sysctl
+configure_limits
+configure_systemd
+enable_vnstat
+install_docker
+configure_syslog_ng
+set_hostname
 }
-
-# 调用主函数
 main "$@"
