@@ -39,11 +39,11 @@ fi
 }
 
 install_packages_debian() {
-apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote syslog-ng python3 qemu-guest-agent systemd-zram-generator
+apt update && apt upgrade -y && apt autoremove -y && apt install -y bc gpg curl wget dnsutils net-tools bash-completion systemd-timesyncd vim nftables vnstat systemd-journal-remote syslog-ng python3 qemu-guest-agent
 }
 
 install_packages_arch() {
-pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat syslog-ng python3 qemu-guest-agent zram-generator
+pacman -Syu --noconfirm && pacman -S --noconfirm bc curl wget dnsutils net-tools bash-completion vim nftables vnstat syslog-ng python3 qemu-guest-agent
 }
 
 configure_timesync() {
