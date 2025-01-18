@@ -293,11 +293,11 @@ create_reboot_timer() {
 
         # 重新加载 systemd 配置
         echo "重新加载 systemd 配置..."
-        sudo systemctl daemon-reload
+        systemctl daemon-reload
 
         # 启动并启用定时器
         echo "启用并启动 reboot.timer 定时器..."
-        sudo systemctl enable --now reboot.timer
+        systemctl enable --now reboot.timer
 
         echo "reboot.timer 已成功创建并启用，定时任务将在每天凌晨 4 点执行重启。"
     fi
