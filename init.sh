@@ -261,6 +261,48 @@ else
 fi
 }
 
+create_reboot_timer() {
+    # 定时器文件路径
+    TIMER_FILE="/etc/systemd/system/reboot.timer"
+    SERVICE_FILE="/etc/systemd/system/reboot.service"
+
+    # 检查定时器文件是否已经存在
+    if [ -f "$TIMER_FILE" ]; then
+        echo "定时器 reboot.timer 已经存在。"
+    else
+        # 创建 systemd 服务文件
+        echo "创建 reboot.service 文件..."
+        echo "[Unit]" > "$SERVICE_FILE"
+        echo "Description=Reboot the system" >> "$SERVICE_FILE"
+        echo "" >> "$SERVICE_FILE"
+        echo "[Service]" >> "$SERVICE_FILE"
+        echo "Type=oneshot" >> "$SERVICE_FILE"
+        echo "ExecStart=/sbin/reboot" >> "$SERVICE_FILE"
+
+        # 创建 systemd 定时器文件
+        echo "创建 reboot.timer 文件..."
+        echo "[Unit]" > "$TIMER_FILE"
+        echo "Description=Timer for daily system reboot at 4 AM" >> "$TIMER_FILE"
+        echo "" >> "$TIMER_FILE"
+        echo "[Timer]" >> "$TIMER_FILE"
+        echo "OnCalendar=*-*-* 04:00:00" >> "$TIMER_FILE"
+        echo "Unit=reboot.service" >> "$TIMER_FILE"
+        echo "" >> "$TIMER_FILE"
+        echo "[Install]" >> "$TIMER_FILE"
+        echo "WantedBy=timers.target" >> "$TIMER_FILE"
+
+        # 重新加载 systemd 配置
+        echo "重新加载 systemd 配置..."
+        sudo systemctl daemon-reload
+
+        # 启动并启用定时器
+        echo "启用并启动 reboot.timer 定时器..."
+        sudo systemctl enable --now reboot.timer
+
+        echo "reboot.timer 已成功创建并启用，定时任务将在每天凌晨 4 点执行重启。"
+    fi
+}
+
 main() {
 echo "">/etc/motd
 if grep -qi "debian" /etc/os-release; then
@@ -281,5 +323,6 @@ enable_vnstat
 install_docker
 configure_syslog_ng
 set_hostname
+create_reboot_timer
 }
 main "$@"
