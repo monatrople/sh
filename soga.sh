@@ -117,7 +117,7 @@ geo_update_enable=true
 dy_limit_enable=true
 dy_limit_trigger_time=300
 dy_limit_trigger_speed=300
-dy_limit_speed=150
+dy_limit_speed=100
 dy_limit_time=1800
 block_list_url=https://raw.githubusercontent.com/monatrople/rulelist/refs/heads/main/blockList
 EOF
